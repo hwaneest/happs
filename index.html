@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HAPPS — 나만의 앱스토어</title>
+  <style>
+    :root {
+      --bg: #f4f6fb;
+      --card: #ffffff;
+      --text: #1f2430;
+      --muted: #6b7280;
+      --border: #e3e7ef;
+      --accent: #4f6ef7;
+      --accent-soft: #eef1fe;
+      --shadow: 0 8px 30px rgba(31, 36, 48, 0.08);
+      --shadow-hover: 0 16px 40px rgba(79, 110, 247, 0.18);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #14161c;
+        --card: #1d2029;
+        --text: #e8eaf0;
+        --muted: #9aa0ab;
+        --border: #2b2f3a;
+        --accent: #6d86ff;
+        --accent-soft: #232a44;
+        --shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+        --shadow-hover: 0 16px 40px rgba(0, 0, 0, 0.5);
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo",
+        "Malgun Gothic", "Helvetica Neue", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    [hidden] { display: none !important; }
+    .wrap {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 48px 20px 72px;
+    }
+
+    /* ===== Hero (store) ===== */
+    .hero {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 14px;
+    }
+    .logo {
+      width: 64px;
+      height: 64px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--accent), #8a6cff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      font-weight: 800;
+      color: #fff;
+      box-shadow: var(--shadow);
+      flex-shrink: 0;
+      letter-spacing: -0.03em;
+    }
+    .hero h1 { font-size: 30px; margin: 0; letter-spacing: -0.03em; }
+    .hero p { margin: 4px 0 0; color: var(--muted); font-size: 15px; }
+
+    /* ===== Search / filter bar ===== */
+    .bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin: 28px 0 24px;
+    }
+    .search { flex: 1 1 260px; position: relative; }
+    .search input {
+      width: 100%;
+      padding: 11px 14px 11px 40px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--card);
+      color: var(--text);
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+    .search input:focus { border-color: var(--accent); }
+    .search svg {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+    }
+    .count-badge { font-size: 14px; color: var(--muted); white-space: nowrap; }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin: 32px 0 14px;
+    }
+
+    /* ===== App grid ===== */
+    .app-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .app {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+    .app.available { cursor: pointer; }
+    .app.available:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-hover);
+      border-color: var(--accent);
+    }
+    .app-top { display: flex; align-items: center; gap: 14px; }
+    .app-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      flex-shrink: 0;
+    }
+    .app-name { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; margin: 0; }
+    .app-cat { font-size: 12.5px; color: var(--muted); margin-top: 1px; }
+    .app-desc { font-size: 14px; color: var(--muted); margin: 0; flex: 1; }
+    .app-action { display: flex; align-items: center; justify-content: space-between; }
+    .pill {
+      font-size: 13px;
+      font-weight: 600;
+      padding: 7px 16px;
+      border-radius: 20px;
+      background: var(--accent);
+      color: #fff;
+    }
+    .app.available:hover .pill { opacity: 0.9; }
+    .pill.soon { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .app.soon { opacity: 0.7; }
+    .empty { text-align: center; color: var(--muted); padding: 48px 0; font-size: 15px; }
+
+    footer { margin-top: 48px; text-align: center; color: var(--muted); font-size: 12.5px; }
+
+    /* ===== Back link (counter view) ===== */
+    .back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0;
+      margin-bottom: 18px;
+    }
+    .back:hover { text-decoration: underline; }
+    .app-header { margin-bottom: 24px; }
+    .app-header h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -0.02em; }
+    .app-header p { margin: 0; color: var(--muted); font-size: 14px; }
+
+    /* ===== Counter editor ===== */
+    .editor-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 260px;
+      resize: vertical;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 16px;
+      line-height: 1.7;
+      font-family: inherit;
+    }
+    textarea::placeholder { color: var(--muted); }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+    button.tool {
+      font-family: inherit;
+      font-size: 14px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      padding: 8px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    button.tool:hover { border-color: var(--accent); color: var(--accent); }
+    button.tool.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    button.tool.primary:hover { opacity: 0.9; color: #fff; }
+
+    /* ===== Counter stats ===== */
+    .grid { display: grid; gap: 12px; margin-top: 20px; }
+    .grid.primary { grid-template-columns: repeat(2, 1fr); }
+    .grid.secondary { grid-template-columns: repeat(5, 1fr); }
+    @media (max-width: 640px) {
+      .grid.secondary { grid-template-columns: repeat(2, 1fr); }
+    }
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 18px;
+    }
+    .stat .num { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+    .stat .label { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .stat.highlight { background: var(--accent-soft); border-color: transparent; }
+    .stat.highlight .num { color: var(--accent); }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--text);
+      color: var(--bg);
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 14px;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s ease;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- ============ STORE VIEW ============ -->
+    <section id="view-store">
+      <div class="hero">
+        <div class="logo">H</div>
+        <div>
+          <h1>HAPPS</h1>
+          <p>내가 만든 앱을 한곳에 모아 두는 나만의 앱스토어</p>
+        </div>
+      </div>
+
+      <div class="bar">
+        <div class="search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input id="search" type="text" placeholder="앱 검색…" />
+        </div>
+        <div class="count-badge" id="countBadge"></div>
+      </div>
+
+      <div class="section-title">앱 목록</div>
+      <div class="app-grid" id="grid">
+        <!-- 새 앱을 추가하려면 아래 형식의 카드를 복사해 넣으세요.
+             내부 앱은 href="#앱키", 외부 링크 앱은 href="경로" 로 지정합니다. -->
+        <a class="app available" href="#counter"
+           data-name="글자수 카운터 텍스트 도구 글자 수 단어 원고지 카운터">
+          <div class="app-top">
+            <div class="app-icon" style="background:#eef1fe;">🔢</div>
+            <div>
+              <p class="app-name">글자수 카운터</p>
+              <div class="app-cat">텍스트 도구</div>
+            </div>
+          </div>
+          <p class="app-desc">입력하는 즉시 글자 수, 단어 수, 원고지 매수까지 실시간으로 계산합니다.</p>
+          <div class="app-action">
+            <span class="pill">열기</span>
+          </div>
+        </a>
+
+        <div class="app soon" data-name="준비 중 곧 공개">
+          <div class="app-top">
+            <div class="app-icon" style="background:var(--accent-soft);">✨</div>
+            <div>
+              <p class="app-name">준비 중</p>
+              <div class="app-cat">곧 공개</div>
+            </div>
+          </div>
+          <p class="app-desc">새로운 앱이 이곳에 추가될 예정입니다.</p>
+          <div class="app-action">
+            <span class="pill soon">준비 중</span>
+          </div>
+        </div>
+      </div>
+      <div class="empty" id="empty" hidden>검색 결과가 없습니다.</div>
+
+      <footer>HAPPS · 오프라인에서도 동작하는 나만의 앱 모음</footer>
+    </section>
+
+    <!-- ============ COUNTER APP VIEW ============ -->
+    <section id="view-counter" hidden>
+      <button class="back" data-nav="#store">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        앱 목록
+      </button>
+
+      <header class="app-header">
+        <h1>글자수 카운터</h1>
+        <p>입력하는 즉시 글자 수를 계산해 드립니다. 🙂</p>
+      </header>
+
+      <div class="editor-card">
+        <textarea id="input" placeholder="여기에 텍스트를 입력하거나 붙여 넣으세요."></textarea>
+        <div class="toolbar">
+          <button class="tool primary" id="copyBtn">복사하기</button>
+          <button class="tool" id="clearBtn">지우기</button>
+          <button class="tool" id="sampleBtn">예시 넣기</button>
+        </div>
+      </div>
+
+      <div class="grid primary">
+        <div class="stat highlight">
+          <div class="num" id="charWithSpace">0</div>
+          <div class="label">글자 수 (공백 포함)</div>
+        </div>
+        <div class="stat highlight">
+          <div class="num" id="charNoSpace">0</div>
+          <div class="label">글자 수 (공백 제외)</div>
+        </div>
+      </div>
+
+      <div class="grid secondary">
+        <div class="stat">
+          <div class="num" id="words">0</div>
+          <div class="label">단어 수</div>
+        </div>
+        <div class="stat">
+          <div class="num" id="lines">0</div>
+          <div class="label">줄 수</div>
+        </div>
+        <div class="stat">
+          <div class="num" id="paragraphs">0</div>
+          <div class="label">문단 수</div>
+        </div>
+        <div class="stat">
+          <div class="num" id="bytes">0</div>
+          <div class="label">바이트 (UTF-8)</div>
+        </div>
+        <div class="stat">
+          <div class="num" id="manuscript">0</div>
+          <div class="label">원고지 (200자 기준)</div>
+        </div>
+      </div>
+
+      <footer>공백 포함 글자 수는 줄바꿈을 제외한 값입니다 · 오프라인에서도 동작합니다</footer>
+    </section>
+  </div>
+
+  <div class="toast" id="toast">클립보드에 복사되었습니다</div>
+
+  <script>
+    /* ============ 라우팅 (스토어 ↔ 앱 화면 전환) ============ */
+    const views = {
+      store: document.getElementById('view-store'),
+      counter: document.getElementById('view-counter'),
+    };
+
+    function route() {
+      const key = (location.hash.replace('#', '') || 'store');
+      const target = views[key] ? key : 'store';
+      Object.entries(views).forEach(([name, elm]) => {
+        elm.hidden = name !== target;
+      });
+      window.scrollTo(0, 0);
+    }
+    window.addEventListener('hashchange', route);
+
+    // 뒤로가기 버튼 (해시 이동)
+    document.querySelectorAll('[data-nav]').forEach((btn) => {
+      btn.addEventListener('click', () => { location.hash = btn.dataset.nav; });
+    });
+
+    /* ============ 스토어: 검색 ============ */
+    const grid = document.getElementById('grid');
+    const emptyEl = document.getElementById('empty');
+    const search = document.getElementById('search');
+    const countBadge = document.getElementById('countBadge');
+    const cards = Array.from(grid.querySelectorAll('.app'));
+
+    countBadge.textContent = `앱 ${grid.querySelectorAll('.app.available').length}개`;
+
+    search.addEventListener('input', (e) => {
+      const q = e.target.value.trim().toLowerCase();
+      let visible = 0;
+      cards.forEach((card) => {
+        const hay = (card.dataset.name || card.textContent).toLowerCase();
+        const show = !q || hay.includes(q);
+        card.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+      emptyEl.hidden = visible !== 0;
+    });
+
+    /* ============ 글자수 카운터 앱 ============ */
+    const input = document.getElementById('input');
+    const el = {
+      charWithSpace: document.getElementById('charWithSpace'),
+      charNoSpace: document.getElementById('charNoSpace'),
+      words: document.getElementById('words'),
+      lines: document.getElementById('lines'),
+      paragraphs: document.getElementById('paragraphs'),
+      bytes: document.getElementById('bytes'),
+      manuscript: document.getElementById('manuscript'),
+    };
+
+    const fmt = (n) => n.toLocaleString('ko-KR');
+
+    function update() {
+      const text = input.value;
+
+      // 공백 포함(줄바꿈 제외): 흔히 쓰는 "글자 수" 기준
+      const withSpace = text.replace(/\n/g, '').length;
+      // 공백 제외: 모든 공백 문자 제거
+      const noSpace = text.replace(/\s/g, '').length;
+
+      const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+      const lines = text === '' ? 0 : text.split(/\n/).length;
+      const paragraphs = text.trim() === ''
+        ? 0
+        : text.trim().split(/\n\s*\n/).filter((p) => p.trim() !== '').length;
+
+      const bytes = new TextEncoder().encode(text).length;
+      const manuscript = Math.ceil(withSpace / 200);
+
+      el.charWithSpace.textContent = fmt(withSpace);
+      el.charNoSpace.textContent = fmt(noSpace);
+      el.words.textContent = fmt(words);
+      el.lines.textContent = fmt(lines);
+      el.paragraphs.textContent = fmt(paragraphs);
+      el.bytes.textContent = fmt(bytes);
+      el.manuscript.textContent = fmt(manuscript);
+    }
+
+    let toastTimer;
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
+    }
+
+    // 예시 텍스트: "예시 넣기"로 불러오며, 입력을 시작하면 자동으로 지워집니다.
+    const SAMPLE = '글자수 카운터는 블로그 글, 자기소개서, 리포트처럼 분량 제한이 있는 글을 쓸 때 유용합니다.\n\n공백 포함 여부에 따라 글자 수가 어떻게 달라지는지 확인해 보세요.';
+    let isDefault = false;
+
+    function loadSample() {
+      input.value = SAMPLE;
+      isDefault = true;
+      update();
+    }
+
+    input.addEventListener('beforeinput', () => {
+      if (isDefault) {
+        input.value = '';
+        isDefault = false;
+      }
+    });
+
+    input.addEventListener('input', () => {
+      isDefault = false;
+      update();
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', async () => {
+      if (!input.value) { showToast('복사할 내용이 없습니다'); return; }
+      try {
+        await navigator.clipboard.writeText(input.value);
+        showToast('클립보드에 복사되었습니다');
+      } catch {
+        input.select();
+        document.execCommand('copy');
+        showToast('클립보드에 복사되었습니다');
+      }
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      input.value = '';
+      isDefault = false;
+      update();
+      input.focus();
+    });
+
+    document.getElementById('sampleBtn').addEventListener('click', loadSample);
+
+    // 초기화
+    update();
+    route();
+  </script>
+</body>
+</html>
