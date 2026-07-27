@@ -263,6 +263,69 @@
       transition: all 0.25s ease;
     }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ===== Pomodoro ===== */
+    .pomo { max-width: 420px; margin: 0 auto; text-align: center; --pomo-accent: var(--accent); }
+    .mode-tabs {
+      display: inline-flex;
+      gap: 6px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 6px;
+      margin-bottom: 30px;
+    }
+    .mode-tabs button {
+      border: none;
+      background: none;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      padding: 8px 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .mode-tabs button.active { background: var(--pomo-accent); color: #fff; }
+    .ring-wrap { position: relative; width: 260px; height: 260px; margin: 0 auto; }
+    .ring-wrap svg { transform: rotate(-90deg); }
+    .ring-bg { stroke: var(--border); }
+    .ring-fg {
+      stroke: var(--pomo-accent);
+      transition: stroke-dashoffset 0.35s linear, stroke 0.3s ease;
+    }
+    .ring-time {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .ring-time .time {
+      font-size: 54px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+    .ring-time .mode-label { font-size: 14px; color: var(--muted); margin-top: 8px; }
+    .pomo-controls { display: flex; gap: 10px; justify-content: center; margin-top: 28px; }
+    .pomo-controls button {
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 14px;
+      transition: opacity 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+    .btn-primary { background: var(--pomo-accent); color: #fff; border: none; padding: 14px 46px; }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-ghost { background: var(--card); color: var(--text); border: 1px solid var(--border); padding: 14px 24px; }
+    .btn-ghost:hover { border-color: var(--pomo-accent); color: var(--pomo-accent); }
+    .pomo-meta { margin-top: 30px; color: var(--muted); font-size: 14px; }
+    .pomo-meta strong { color: var(--text); font-size: 17px; margin: 0 2px; }
   </style>
 </head>
 <body>
@@ -302,6 +365,21 @@
             </div>
           </div>
           <p class="app-desc">입력하는 즉시 글자 수, 단어 수, 원고지 매수까지 실시간으로 계산합니다.</p>
+          <div class="app-action">
+            <span class="pill">열기</span>
+          </div>
+        </a>
+
+        <a class="app available" href="#pomodoro"
+           data-name="뽀모도로 타이머 pomodoro 집중 시간 관리 생산성 타이머">
+          <div class="app-top">
+            <div class="app-icon" style="background:#fdecea;">🍅</div>
+            <div>
+              <p class="app-name">뽀모도로 타이머</p>
+              <div class="app-cat">생산성</div>
+            </div>
+          </div>
+          <p class="app-desc">25분 집중과 휴식을 반복하며 몰입을 돕는 뽀모도로 타이머입니다.</p>
           <div class="app-action">
             <span class="pill">열기</span>
           </div>
@@ -386,6 +464,52 @@
 
       <footer>공백 포함 글자 수는 줄바꿈을 제외한 값입니다 · 오프라인에서도 동작합니다</footer>
     </section>
+
+    <!-- ============ POMODORO APP VIEW ============ -->
+    <section id="view-pomodoro" hidden>
+      <button class="back" data-nav="#store">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        앱 목록
+      </button>
+
+      <header class="app-header">
+        <h1>뽀모도로 타이머</h1>
+        <p>25분 집중하고 잠깐 쉬며, 몰입의 리듬을 만들어 보세요. 🍅</p>
+      </header>
+
+      <div class="pomo">
+        <div class="mode-tabs">
+          <button data-mode="focus" class="active">집중</button>
+          <button data-mode="short">짧은 휴식</button>
+          <button data-mode="long">긴 휴식</button>
+        </div>
+
+        <div class="ring-wrap">
+          <svg width="260" height="260" viewBox="0 0 260 260">
+            <circle class="ring-bg" cx="130" cy="130" r="116" fill="none" stroke-width="12"></circle>
+            <circle class="ring-fg" id="ringFg" cx="130" cy="130" r="116" fill="none" stroke-width="12" stroke-linecap="round"></circle>
+          </svg>
+          <div class="ring-time">
+            <div class="time" id="pomoTime">25:00</div>
+            <div class="mode-label" id="pomoModeLabel">집중 시간</div>
+          </div>
+        </div>
+
+        <div class="pomo-controls">
+          <button class="btn-primary" id="pomoToggle">시작</button>
+          <button class="btn-ghost" id="pomoReset">리셋</button>
+        </div>
+
+        <div class="pomo-meta">
+          오늘 완료한 뽀모도로 <strong id="pomoCount">0</strong>회
+        </div>
+      </div>
+
+      <footer>집중 25분 · 짧은 휴식 5분 · 긴 휴식 15분 · 집중 4회마다 긴 휴식</footer>
+    </section>
   </div>
 
   <div class="toast" id="toast">클립보드에 복사되었습니다</div>
@@ -395,6 +519,7 @@
     const views = {
       store: document.getElementById('view-store'),
       counter: document.getElementById('view-counter'),
+      pomodoro: document.getElementById('view-pomodoro'),
     };
 
     function route() {
@@ -525,8 +650,141 @@
 
     document.getElementById('sampleBtn').addEventListener('click', loadSample);
 
+    /* ============ 뽀모도로 타이머 앱 ============ */
+    const DEFAULT_TITLE = document.title;
+    const POMO_DURATION = { focus: 25 * 60, short: 5 * 60, long: 15 * 60 };
+    const POMO_LABEL = { focus: '집중 시간', short: '짧은 휴식', long: '긴 휴식' };
+    const POMO_COLOR = { focus: 'var(--accent)', short: '#22a06b', long: '#22a06b' };
+
+    const pomoEl = document.querySelector('.pomo');
+    const ringFg = document.getElementById('ringFg');
+    const pomoTimeEl = document.getElementById('pomoTime');
+    const pomoModeLabel = document.getElementById('pomoModeLabel');
+    const pomoToggleBtn = document.getElementById('pomoToggle');
+    const pomoResetBtn = document.getElementById('pomoReset');
+    const pomoCountEl = document.getElementById('pomoCount');
+    const modeButtons = Array.from(document.querySelectorAll('.mode-tabs button'));
+
+    const RING_CIRC = 2 * Math.PI * 116; // r=116
+    ringFg.style.strokeDasharray = RING_CIRC;
+
+    let pomoMode = 'focus';
+    let remaining = POMO_DURATION[pomoMode];
+    let running = false;
+    let ticker = null;
+    let endAt = 0;
+    let focusDone = 0; // 완료한 집중(뽀모도로) 횟수
+
+    const two = (n) => String(n).padStart(2, '0');
+
+    function pomoRender() {
+      const total = POMO_DURATION[pomoMode];
+      const m = Math.floor(remaining / 60);
+      const s = remaining % 60;
+      const timeText = `${two(m)}:${two(s)}`;
+
+      pomoTimeEl.textContent = timeText;
+      pomoModeLabel.textContent = POMO_LABEL[pomoMode];
+      pomoToggleBtn.textContent = running ? '일시정지' : '시작';
+      pomoCountEl.textContent = focusDone;
+      pomoEl.style.setProperty('--pomo-accent', POMO_COLOR[pomoMode]);
+
+      // 남은 시간만큼 링을 채운다 (시작 시 꽉 참 → 0에서 비워짐)
+      const offset = RING_CIRC * (1 - remaining / total);
+      ringFg.style.strokeDashoffset = offset;
+
+      modeButtons.forEach((b) => b.classList.toggle('active', b.dataset.mode === pomoMode));
+
+      document.title = running ? `${timeText} · ${POMO_LABEL[pomoMode]}` : DEFAULT_TITLE;
+    }
+
+    // 완료 알림음 (Web Audio, 외부 파일 없이 생성)
+    function beep() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.7);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.72);
+      } catch (e) { /* 오디오 미지원 환경 무시 */ }
+    }
+
+    function stopTicking() {
+      running = false;
+      clearInterval(ticker);
+      ticker = null;
+    }
+
+    function pomoTick() {
+      remaining = Math.max(0, Math.round((endAt - Date.now()) / 1000));
+      if (remaining <= 0) {
+        remaining = 0;
+        pomoRender();
+        pomoComplete();
+        return;
+      }
+      pomoRender();
+    }
+
+    function startPomo() {
+      if (running) return;
+      running = true;
+      endAt = Date.now() + remaining * 1000;
+      ticker = setInterval(pomoTick, 200);
+      pomoRender();
+    }
+
+    function pausePomo() {
+      stopTicking();
+      pomoRender();
+    }
+
+    function setMode(mode) {
+      stopTicking();
+      pomoMode = mode;
+      remaining = POMO_DURATION[mode];
+      pomoRender();
+    }
+
+    function pomoComplete() {
+      stopTicking();
+      beep();
+      if (pomoMode === 'focus') {
+        focusDone += 1;
+        // 집중 4회마다 긴 휴식, 그 외엔 짧은 휴식
+        const next = focusDone % 4 === 0 ? 'long' : 'short';
+        showToast('집중 완료! 잠시 쉬어 가세요 ☕');
+        setMode(next);
+      } else {
+        showToast('휴식 끝! 다시 집중해 볼까요 🍅');
+        setMode('focus');
+      }
+    }
+
+    modeButtons.forEach((btn) => {
+      btn.addEventListener('click', () => setMode(btn.dataset.mode));
+    });
+    pomoToggleBtn.addEventListener('click', () => (running ? pausePomo() : startPomo()));
+    pomoResetBtn.addEventListener('click', () => setMode(pomoMode));
+
+    // 뽀모도로 화면에서 스페이스바로 시작/일시정지
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && !views.pomodoro.hidden && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        running ? pausePomo() : startPomo();
+      }
+    });
+
     // 초기화
     update();
+    pomoRender();
     route();
   </script>
 </body>
