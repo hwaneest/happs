@@ -326,6 +326,70 @@
     .btn-ghost:hover { border-color: var(--pomo-accent); color: var(--pomo-accent); }
     .pomo-meta { margin-top: 30px; color: var(--muted); font-size: 14px; }
     .pomo-meta strong { color: var(--text); font-size: 17px; margin: 0 2px; }
+
+    /* ===== Shared form controls (GPA / To-Do / D-Day) ===== */
+    .field-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin: 0; }
+    .field { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 120px; }
+    .field label { font-size: 13px; color: var(--muted); font-weight: 600; }
+    input[type="number"], input[type="text"], input[type="date"], select {
+      width: 100%;
+      padding: 11px 13px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+    input:focus, select:focus { border-color: var(--accent); }
+    .hint { font-size: 13px; color: var(--muted); margin: 14px 0 0; }
+
+    /* ===== To-Do ===== */
+    .list-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 24px 0 12px; flex-wrap: wrap; }
+    .filters { display: inline-flex; gap: 4px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 4px; }
+    .filters button {
+      border: none; background: none; font-family: inherit; font-size: 13.5px; font-weight: 600;
+      color: var(--muted); padding: 6px 14px; border-radius: 8px; cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .filters button.active { background: var(--accent); color: #fff; }
+    .linkbtn { border: none; background: none; color: var(--muted); font-family: inherit; font-size: 13px; cursor: pointer; padding: 4px; }
+    .linkbtn:hover { color: var(--accent); }
+    .todo-list, .dday-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+    .todo-item {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;
+    }
+    .todo-item .check {
+      width: 22px; height: 22px; border-radius: 7px; border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+      color: #fff; transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .todo-item.done .check { background: var(--accent); border-color: var(--accent); }
+    .todo-item .text { flex: 1; font-size: 15px; word-break: break-word; }
+    .todo-item.done .text { color: var(--muted); text-decoration: line-through; }
+    .todo-item .del, .dday-item .del {
+      border: none; background: none; color: var(--muted); cursor: pointer; font-size: 18px;
+      padding: 2px 6px; border-radius: 8px; flex-shrink: 0; line-height: 1;
+    }
+    .todo-item .del:hover, .dday-item .del:hover { color: #e5484d; background: var(--accent-soft); }
+
+    /* ===== D-Day ===== */
+    .dday-item {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px;
+    }
+    .dday-badge {
+      font-size: 20px; font-weight: 800; letter-spacing: -0.02em; min-width: 78px; text-align: center;
+      color: var(--accent); font-variant-numeric: tabular-nums;
+    }
+    .dday-badge.past { color: var(--muted); }
+    .dday-badge.today { color: #e5484d; }
+    .dday-info { flex: 1; }
+    .dday-info .dname { font-size: 15.5px; font-weight: 600; word-break: break-word; }
+    .dday-info .ddate { font-size: 13px; color: var(--muted); margin-top: 2px; }
   </style>
 </head>
 <body>
@@ -380,6 +444,51 @@
             </div>
           </div>
           <p class="app-desc">25분 집중과 휴식을 반복하며 몰입을 돕는 뽀모도로 타이머입니다.</p>
+          <div class="app-action">
+            <span class="pill">열기</span>
+          </div>
+        </a>
+
+        <a class="app available" href="#gpa"
+           data-name="학점 변환기 GPA 학점 환산 4.0 4.3 4.5 5.0 백분율 성적">
+          <div class="app-top">
+            <div class="app-icon" style="background:#eafaf1;">🎓</div>
+            <div>
+              <p class="app-name">학점 변환기</p>
+              <div class="app-cat">학업</div>
+            </div>
+          </div>
+          <p class="app-desc">4.0·4.3·4.5·5.0 만점 학점을 서로 환산하고 백분율까지 계산합니다.</p>
+          <div class="app-action">
+            <span class="pill">열기</span>
+          </div>
+        </a>
+
+        <a class="app available" href="#todo"
+           data-name="할 일 목록 to-do todo 투두 체크리스트 할일 생산성">
+          <div class="app-top">
+            <div class="app-icon" style="background:#eef1fe;">✅</div>
+            <div>
+              <p class="app-name">할 일 목록</p>
+              <div class="app-cat">생산성</div>
+            </div>
+          </div>
+          <p class="app-desc">할 일을 추가·완료·삭제하고 브라우저에 자동 저장되는 투두 리스트입니다.</p>
+          <div class="app-action">
+            <span class="pill">열기</span>
+          </div>
+        </a>
+
+        <a class="app available" href="#dday"
+           data-name="D-Day 디데이 날짜 계산기 기념일 시험 카운트다운">
+          <div class="app-top">
+            <div class="app-icon" style="background:#fff4e5;">📅</div>
+            <div>
+              <p class="app-name">D-Day 계산기</p>
+              <div class="app-cat">날짜 도구</div>
+            </div>
+          </div>
+          <p class="app-desc">시험·기념일까지 남은 일수를 계산하고 여러 개를 목록으로 관리합니다.</p>
           <div class="app-action">
             <span class="pill">열기</span>
           </div>
@@ -510,6 +619,127 @@
 
       <footer>집중 25분 · 짧은 휴식 5분 · 긴 휴식 15분 · 집중 4회마다 긴 휴식</footer>
     </section>
+
+    <!-- ============ GPA CONVERTER APP VIEW ============ -->
+    <section id="view-gpa" hidden>
+      <button class="back" data-nav="#store">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        앱 목록
+      </button>
+
+      <header class="app-header">
+        <h1>학점 변환기</h1>
+        <p>내 학점을 다른 만점 기준으로 환산해 보세요. 🎓</p>
+      </header>
+
+      <div class="editor-card">
+        <div class="field-row">
+          <div class="field">
+            <label for="gpaValue">내 학점 (평점)</label>
+            <input id="gpaValue" type="number" inputmode="decimal" step="0.01" min="0" placeholder="예: 3.8" />
+          </div>
+          <div class="field">
+            <label for="gpaScale">기준 만점</label>
+            <select id="gpaScale">
+              <option value="4.5">4.5 만점</option>
+              <option value="4.3">4.3 만점</option>
+              <option value="4.0">4.0 만점</option>
+              <option value="5.0">5.0 만점</option>
+            </select>
+          </div>
+        </div>
+        <p class="hint" id="gpaHint">학점을 입력하면 다른 기준으로 환산해 드립니다.</p>
+      </div>
+
+      <div class="grid primary">
+        <div class="stat highlight">
+          <div class="num" id="gpaPercent">–</div>
+          <div class="label">백분율 (100점 환산)</div>
+        </div>
+        <div class="stat highlight">
+          <div class="num" id="gpaMain">–</div>
+          <div class="label" id="gpaMainLabel">4.5 만점 기준</div>
+        </div>
+      </div>
+
+      <div class="grid secondary" style="grid-template-columns: repeat(4, 1fr);">
+        <div class="stat"><div class="num" id="gpa40">–</div><div class="label">4.0 만점</div></div>
+        <div class="stat"><div class="num" id="gpa43">–</div><div class="label">4.3 만점</div></div>
+        <div class="stat"><div class="num" id="gpa45">–</div><div class="label">4.5 만점</div></div>
+        <div class="stat"><div class="num" id="gpa50">–</div><div class="label">5.0 만점</div></div>
+      </div>
+
+      <footer>단순 비례 환산값입니다 · 학교·기관별 실제 환산표와 다를 수 있어요</footer>
+    </section>
+
+    <!-- ============ TO-DO APP VIEW ============ -->
+    <section id="view-todo" hidden>
+      <button class="back" data-nav="#store">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        앱 목록
+      </button>
+
+      <header class="app-header">
+        <h1>할 일 목록</h1>
+        <p>할 일을 적어 두고 하나씩 지워 보세요. 자동 저장됩니다. ✅</p>
+      </header>
+
+      <div class="editor-card">
+        <form class="field-row" id="todoForm" style="margin:0;">
+          <input id="todoInput" type="text" placeholder="할 일을 입력하고 Enter…" autocomplete="off" style="flex:1;" />
+          <button type="submit" class="tool primary">추가</button>
+        </form>
+      </div>
+
+      <div class="list-head">
+        <div class="filters" id="todoFilters">
+          <button data-filter="all" class="active">전체</button>
+          <button data-filter="active">진행 중</button>
+          <button data-filter="done">완료</button>
+        </div>
+        <button class="linkbtn" id="todoClear">완료 항목 지우기</button>
+      </div>
+
+      <ul class="todo-list" id="todoList"></ul>
+      <div class="empty" id="todoEmpty">아직 할 일이 없어요. 위에서 추가해 보세요.</div>
+
+      <footer><span id="todoCount">0</span>개 남음 · 브라우저에 자동 저장됩니다</footer>
+    </section>
+
+    <!-- ============ D-DAY APP VIEW ============ -->
+    <section id="view-dday" hidden>
+      <button class="back" data-nav="#store">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        앱 목록
+      </button>
+
+      <header class="app-header">
+        <h1>D-Day 계산기</h1>
+        <p>중요한 날까지 며칠 남았는지 한눈에 확인하세요. 📅</p>
+      </header>
+
+      <div class="editor-card">
+        <form class="field-row" id="ddayForm" style="margin:0;">
+          <input id="ddayLabel" type="text" placeholder="이름 (예: 정보처리기사 시험)" autocomplete="off" style="flex:2;" />
+          <input id="ddayDate" type="date" style="flex:1;" />
+          <button type="submit" class="tool primary">추가</button>
+        </form>
+      </div>
+
+      <ul class="dday-list" id="ddayList"></ul>
+      <div class="empty" id="ddayEmpty">등록된 D-Day가 없어요. 위에서 추가해 보세요.</div>
+
+      <footer>날짜는 브라우저에 자동 저장됩니다 · 오늘 기준으로 계산합니다</footer>
+    </section>
   </div>
 
   <div class="toast" id="toast">클립보드에 복사되었습니다</div>
@@ -520,6 +750,9 @@
       store: document.getElementById('view-store'),
       counter: document.getElementById('view-counter'),
       pomodoro: document.getElementById('view-pomodoro'),
+      gpa: document.getElementById('view-gpa'),
+      todo: document.getElementById('view-todo'),
+      dday: document.getElementById('view-dday'),
     };
 
     function route() {
@@ -782,9 +1015,194 @@
       }
     });
 
+    /* ============ 학점 변환기 앱 ============ */
+    const gpaValue = document.getElementById('gpaValue');
+    const gpaScale = document.getElementById('gpaScale');
+    const gpaHint = document.getElementById('gpaHint');
+    const gpaOut = {
+      percent: document.getElementById('gpaPercent'),
+      main: document.getElementById('gpaMain'),
+      mainLabel: document.getElementById('gpaMainLabel'),
+      s40: document.getElementById('gpa40'),
+      s43: document.getElementById('gpa43'),
+      s45: document.getElementById('gpa45'),
+      s50: document.getElementById('gpa50'),
+    };
+
+    function gpaRender() {
+      const val = parseFloat(gpaValue.value);
+      const max = parseFloat(gpaScale.value);
+      const blanks = () => {
+        ['percent', 'main', 's40', 's43', 's45', 's50'].forEach((k) => (gpaOut[k].textContent = '–'));
+      };
+
+      gpaOut.mainLabel.textContent = `${max} 만점 기준`;
+
+      if (gpaValue.value.trim() === '' || isNaN(val)) {
+        gpaHint.textContent = '학점을 입력하면 다른 기준으로 환산해 드립니다.';
+        blanks();
+        return;
+      }
+      if (val < 0 || val > max) {
+        gpaHint.textContent = `0 ~ ${max} 사이의 값을 입력해 주세요.`;
+        blanks();
+        return;
+      }
+
+      const ratio = val / max; // 0~1
+      const r2 = (n) => (Math.round(n * 100) / 100).toFixed(2);
+
+      gpaOut.percent.textContent = Math.round(ratio * 100);
+      gpaOut.main.textContent = r2(val);
+      gpaOut.s40.textContent = r2(ratio * 4.0);
+      gpaOut.s43.textContent = r2(ratio * 4.3);
+      gpaOut.s45.textContent = r2(ratio * 4.5);
+      gpaOut.s50.textContent = r2(ratio * 5.0);
+      gpaHint.textContent = `${val} / ${max} = 상위 기준 ${Math.round(ratio * 100)}% 수준으로 환산했습니다.`;
+    }
+    gpaValue.addEventListener('input', gpaRender);
+    gpaScale.addEventListener('change', gpaRender);
+
+    /* ============ 할 일 목록 앱 ============ */
+    const TODO_KEY = 'happs.todos';
+    const todoForm = document.getElementById('todoForm');
+    const todoInput = document.getElementById('todoInput');
+    const todoListEl = document.getElementById('todoList');
+    const todoEmpty = document.getElementById('todoEmpty');
+    const todoCount = document.getElementById('todoCount');
+    const todoClear = document.getElementById('todoClear');
+    const todoFilters = document.getElementById('todoFilters');
+    let todos = load(TODO_KEY, []);
+    let todoFilter = 'all';
+
+    function load(key, fallback) {
+      try { return JSON.parse(localStorage.getItem(key)) || fallback; }
+      catch { return fallback; }
+    }
+    function save(key, data) {
+      try { localStorage.setItem(key, JSON.stringify(data)); } catch (e) { /* 저장 불가 무시 */ }
+    }
+
+    function todoRender() {
+      const filtered = todos.filter((t) =>
+        todoFilter === 'all' ? true : todoFilter === 'done' ? t.done : !t.done
+      );
+      todoListEl.innerHTML = filtered.map((t) => `
+        <li class="todo-item ${t.done ? 'done' : ''}" data-id="${t.id}">
+          <div class="check" role="checkbox" aria-checked="${t.done}">${t.done ? '✓' : ''}</div>
+          <div class="text"></div>
+          <button class="del" title="삭제">×</button>
+        </li>`).join('');
+      // 텍스트는 XSS 방지를 위해 textContent로 주입
+      Array.from(todoListEl.children).forEach((li, i) => {
+        li.querySelector('.text').textContent = filtered[i].text;
+      });
+      const remaining = todos.filter((t) => !t.done).length;
+      todoCount.textContent = remaining;
+      todoEmpty.hidden = filtered.length !== 0;
+    }
+
+    todoForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = todoInput.value.trim();
+      if (!text) return;
+      todos.push({ id: Date.now(), text, done: false });
+      todoInput.value = '';
+      save(TODO_KEY, todos);
+      todoRender();
+    });
+    todoListEl.addEventListener('click', (e) => {
+      const li = e.target.closest('.todo-item');
+      if (!li) return;
+      const id = Number(li.dataset.id);
+      if (e.target.classList.contains('del')) {
+        todos = todos.filter((t) => t.id !== id);
+      } else if (e.target.classList.contains('check')) {
+        const t = todos.find((x) => x.id === id);
+        if (t) t.done = !t.done;
+      } else { return; }
+      save(TODO_KEY, todos);
+      todoRender();
+    });
+    todoFilters.addEventListener('click', (e) => {
+      if (e.target.tagName !== 'BUTTON') return;
+      todoFilter = e.target.dataset.filter;
+      Array.from(todoFilters.children).forEach((b) => b.classList.toggle('active', b === e.target));
+      todoRender();
+    });
+    todoClear.addEventListener('click', () => {
+      todos = todos.filter((t) => !t.done);
+      save(TODO_KEY, todos);
+      todoRender();
+    });
+
+    /* ============ D-Day 계산기 앱 ============ */
+    const DDAY_KEY = 'happs.ddays';
+    const ddayForm = document.getElementById('ddayForm');
+    const ddayLabel = document.getElementById('ddayLabel');
+    const ddayDate = document.getElementById('ddayDate');
+    const ddayListEl = document.getElementById('ddayList');
+    const ddayEmpty = document.getElementById('ddayEmpty');
+    let ddays = load(DDAY_KEY, []);
+
+    function daysBetween(dateStr) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const target = new Date(dateStr + 'T00:00:00');
+      return Math.round((target - today) / 86400000);
+    }
+    function ddayText(diff) {
+      if (diff === 0) return { badge: 'D-DAY', cls: 'today' };
+      if (diff > 0) return { badge: 'D-' + diff, cls: '' };
+      return { badge: 'D+' + Math.abs(diff), cls: 'past' };
+    }
+
+    function ddayRender() {
+      const sorted = [...ddays].sort((a, b) => new Date(a.date) - new Date(b.date));
+      ddayListEl.innerHTML = sorted.map((d) => {
+        const diff = daysBetween(d.date);
+        const info = ddayText(diff);
+        return `
+          <li class="dday-item" data-id="${d.id}">
+            <div class="dday-badge ${info.cls}">${info.badge}</div>
+            <div class="dday-info">
+              <div class="dname"></div>
+              <div class="ddate">${d.date} (${diff === 0 ? '오늘' : diff > 0 ? diff + '일 남음' : Math.abs(diff) + '일 지남'})</div>
+            </div>
+            <button class="del" title="삭제">×</button>
+          </li>`;
+      }).join('');
+      Array.from(ddayListEl.children).forEach((li, i) => {
+        li.querySelector('.dname').textContent = sorted[i].label;
+      });
+      ddayEmpty.hidden = ddays.length !== 0;
+    }
+
+    ddayForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const label = ddayLabel.value.trim();
+      const date = ddayDate.value;
+      if (!label || !date) { showToast('이름과 날짜를 모두 입력해 주세요'); return; }
+      ddays.push({ id: Date.now(), label, date });
+      ddayLabel.value = '';
+      ddayDate.value = '';
+      save(DDAY_KEY, ddays);
+      ddayRender();
+    });
+    ddayListEl.addEventListener('click', (e) => {
+      if (!e.target.classList.contains('del')) return;
+      const li = e.target.closest('.dday-item');
+      ddays = ddays.filter((d) => d.id !== Number(li.dataset.id));
+      save(DDAY_KEY, ddays);
+      ddayRender();
+    });
+
     // 초기화
     update();
     pomoRender();
+    gpaRender();
+    todoRender();
+    ddayRender();
     route();
   </script>
 </body>
