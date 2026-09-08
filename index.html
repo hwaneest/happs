@@ -849,30 +849,13 @@
       </button>
 
       <header class="app-header">
-        <h1>Checkhere</h1>
+        <h1>Attendance Check Page</h1>
         <p>버튼을 누르면 팝업이 열립니다. 이름을 넣으면 출석 완료! 🙋</p>
       </header>
 
       <div class="editor-card" style="text-align:center;">
         <button class="btn-primary" id="checkOpenBtn" style="border-radius:14px; padding:14px 46px; font-family:inherit; font-weight:700; font-size:16px; background:var(--accent); color:#fff; border:none; cursor:pointer;">출석 체크하기</button>
       </div>
-
-      <div class="grid primary" style="grid-template-columns: 1fr;">
-        <div class="stat highlight">
-          <div class="num" id="checkCount">0</div>
-          <div class="label">오늘 출석한 인원</div>
-        </div>
-      </div>
-
-      <div class="list-head">
-        <div class="section-title" style="margin:0;">오늘 출석 명단</div>
-        <button class="linkbtn" id="checkClear">오늘 명단 지우기</button>
-      </div>
-
-      <ul class="todo-list" id="checkList"></ul>
-      <div class="empty" id="checkEmpty">아직 출석한 사람이 없어요. 위 버튼을 눌러 보세요.</div>
-
-      <footer>출석 기록은 날짜별로 브라우저에 자동 저장됩니다</footer>
     </section>
   </div>
 
@@ -1397,10 +1380,6 @@
     const checkCancel = document.getElementById('checkCancel');
     const checkForm = document.getElementById('checkForm');
     const checkName = document.getElementById('checkName');
-    const checkListEl = document.getElementById('checkList');
-    const checkEmpty = document.getElementById('checkEmpty');
-    const checkCountEl = document.getElementById('checkCount');
-    const checkClear = document.getElementById('checkClear');
     let checkins = load(CHECK_KEY, []);
 
     // ── Google 시트 연동 설정 ─────────────────────────────────
@@ -1429,37 +1408,6 @@
           + '&callback=' + cb;
         document.body.appendChild(s);
       });
-    }
-
-    // 오늘 날짜 문자열(YYYY-MM-DD) — 출석은 '오늘' 기준으로 보여줍니다.
-    function checkToday() { return todayISO(); }
-
-    function fmtCheckTime(iso) {
-      const d = new Date(iso);
-      const h = d.getHours();
-      const m = two(d.getMinutes());
-      const ampm = h < 12 ? '오전' : '오후';
-      const h12 = h % 12 === 0 ? 12 : h % 12;
-      return `${ampm} ${h12}:${m}`;
-    }
-
-    function checkRender() {
-      const today = checkToday();
-      const list = checkins
-        .filter((c) => c.date === today)
-        .sort((a, b) => new Date(b.time) - new Date(a.time)); // 최신순
-      checkListEl.innerHTML = list.map((c) => `
-        <li class="todo-item" data-id="${c.id}">
-          <div class="check" style="background:var(--accent);border-color:var(--accent);">✓</div>
-          <div class="text"></div>
-          <span class="app-cat" style="flex-shrink:0;">${fmtCheckTime(c.time)}</span>
-          <button class="del" title="삭제">×</button>
-        </li>`).join('');
-      Array.from(checkListEl.children).forEach((li, i) => {
-        li.querySelector('.text').textContent = list[i].name;
-      });
-      checkCountEl.textContent = list.length;
-      checkEmpty.hidden = list.length !== 0;
     }
 
     function openCheckModal() {
@@ -1495,7 +1443,6 @@
       const now = new Date();
       checkins.push({ id: Date.now(), name, date: todayISO(), time: now.toISOString() });
       save(CHECK_KEY, checkins);
-      checkRender();
 
       // 2) Google 시트에 '출석' 기록 (가장 가까운 날짜 열 + 이름 행)
       const res = await callSheet(name);
@@ -1515,21 +1462,6 @@
       }
     });
 
-    checkListEl.addEventListener('click', (e) => {
-      if (!e.target.classList.contains('del')) return;
-      const li = e.target.closest('.todo-item');
-      checkins = checkins.filter((c) => c.id !== Number(li.dataset.id));
-      save(CHECK_KEY, checkins);
-      checkRender();
-    });
-
-    checkClear.addEventListener('click', () => {
-      const today = checkToday();
-      checkins = checkins.filter((c) => c.date !== today);
-      save(CHECK_KEY, checkins);
-      checkRender();
-    });
-
     // 초기화
     update();
     pomoRender();
@@ -1537,7 +1469,6 @@
     todoRender();
     ddayRender();
     calcRender();
-    checkRender();
     route();
   </script>
 </body>
