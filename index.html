@@ -1374,17 +1374,19 @@
     calcBase.value = todayISO();
 
     /* ============ Checkhere 출석 체크 앱 ============ */
-    const CHECK_KEY = 'happs.checkins';
+    // 출석은 이제 Google 시트에만 기록합니다.
+    // 예전 버전이 브라우저에 남겨 둔 출석 기록을 정리합니다.
+    try { localStorage.removeItem('happs.checkins'); } catch (e) {}
+
     const checkModal = document.getElementById('checkModal');
     const checkOpenBtn = document.getElementById('checkOpenBtn');
     const checkCancel = document.getElementById('checkCancel');
     const checkForm = document.getElementById('checkForm');
     const checkName = document.getElementById('checkName');
-    let checkins = load(CHECK_KEY, []);
 
     // ── Google 시트 연동 설정 ─────────────────────────────────
     // 시트에 배포한 Apps Script 웹앱 URL을 아래에 붙여넣으세요.
-    // (비워 두면 화면 명단에만 저장되고, 시트에는 기록되지 않습니다.)
+    // (비워 두면 출석이 아무 곳에도 기록되지 않습니다.)
     const CHECKHERE_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyXe8YxU-nJfpNFJBwfTdocUiUCzIt0oawaCiIC9ZY6g7ELOa4KrHAsKi9v0Do5GLhz/exec';
 
     // Apps Script 웹앱을 JSONP로 호출합니다. (CORS 우회 + 성공/실패 확인 가능)
@@ -1439,12 +1441,7 @@
       submitBtn.disabled = true;
       submitBtn.textContent = '기록 중…';
 
-      // 1) 화면 명단(로컬)에 저장
-      const now = new Date();
-      checkins.push({ id: Date.now(), name, date: todayISO(), time: now.toISOString() });
-      save(CHECK_KEY, checkins);
-
-      // 2) Google 시트에 '출석' 기록 (가장 가까운 날짜 열 + 이름 행)
+      // Google 시트에 '출석' 기록 (가장 가까운 날짜 열 + 이름 행)
       const res = await callSheet(name);
 
       submitBtn.disabled = false;
@@ -1452,13 +1449,13 @@
       closeCheckModal();
 
       if (res.skipped) {
-        showToast(`${name} 님 출석 완료! 🙋 (시트 미연동)`);
+        showToast(`시트가 연동되지 않아 기록되지 않았어요`);
       } else if (res.ok) {
         showToast(`${name} 님 출석 완료! 🙋 (시트 ${res.column || ''} 기록됨)`);
       } else if (res.notFound) {
         showToast(`명단에서 '${name}' 님을 찾지 못했어요`);
       } else {
-        showToast(`화면엔 저장됨 · 시트 기록 실패: ${res.error || '알 수 없음'}`);
+        showToast(`시트 기록 실패: ${res.error || '알 수 없음'}`);
       }
     });
 
