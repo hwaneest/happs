@@ -264,6 +264,50 @@
     }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+    /* ===== Modal (Checkhere popup) ===== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(20, 22, 28, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 50;
+      animation: overlayIn 0.15s ease;
+    }
+    @keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow-hover);
+      padding: 26px 24px 22px;
+      width: 100%;
+      max-width: 360px;
+      animation: modalIn 0.18s ease;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(12px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .modal-title { font-size: 20px; margin: 0 0 6px; letter-spacing: -0.02em; }
+    .modal-desc { font-size: 14px; color: var(--muted); margin: 0 0 18px; }
+    .modal input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 16px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+    .modal input:focus { border-color: var(--accent); }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+
     /* ===== Pomodoro ===== */
     .pomo { max-width: 420px; margin: 0 auto; text-align: center; --pomo-accent: var(--accent); }
     .mode-tabs {
@@ -500,6 +544,21 @@
             </div>
           </div>
           <p class="app-desc">시험·기념일까지 남은 일수를 계산하고 여러 개를 목록으로 관리합니다.</p>
+          <div class="app-action">
+            <span class="pill">열기</span>
+          </div>
+        </a>
+
+        <a class="app available" href="#checkhere"
+           data-name="Checkhere 체크히어 출석체크 출석 체크 attendance 명단 참석 출결">
+          <div class="app-top">
+            <div class="app-icon" style="background:#eafaf1;">🙋</div>
+            <div>
+              <p class="app-name">Checkhere</p>
+              <div class="app-cat">출석 체크</div>
+            </div>
+          </div>
+          <p class="app-desc">팝업창에 이름을 입력하면 시간과 함께 출석이 기록되는 간단한 출석 체크 앱입니다.</p>
           <div class="app-action">
             <span class="pill">열기</span>
           </div>
@@ -778,6 +837,58 @@
 
       <footer>날짜는 브라우저에 자동 저장됩니다 · 오늘 기준으로 계산합니다</footer>
     </section>
+
+    <!-- ============ CHECKHERE APP VIEW ============ -->
+    <section id="view-checkhere" hidden>
+      <button class="back" data-nav="#store">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        앱 목록
+      </button>
+
+      <header class="app-header">
+        <h1>Checkhere</h1>
+        <p>버튼을 누르면 팝업이 열립니다. 이름을 넣으면 출석 완료! 🙋</p>
+      </header>
+
+      <div class="editor-card" style="text-align:center;">
+        <button class="btn-primary" id="checkOpenBtn" style="border-radius:14px; padding:14px 46px; font-family:inherit; font-weight:700; font-size:16px; background:var(--accent); color:#fff; border:none; cursor:pointer;">출석 체크하기</button>
+      </div>
+
+      <div class="grid primary" style="grid-template-columns: 1fr;">
+        <div class="stat highlight">
+          <div class="num" id="checkCount">0</div>
+          <div class="label">오늘 출석한 인원</div>
+        </div>
+      </div>
+
+      <div class="list-head">
+        <div class="section-title" style="margin:0;">오늘 출석 명단</div>
+        <button class="linkbtn" id="checkClear">오늘 명단 지우기</button>
+      </div>
+
+      <ul class="todo-list" id="checkList"></ul>
+      <div class="empty" id="checkEmpty">아직 출석한 사람이 없어요. 위 버튼을 눌러 보세요.</div>
+
+      <footer>출석 기록은 날짜별로 브라우저에 자동 저장됩니다</footer>
+    </section>
+  </div>
+
+  <!-- ============ CHECKHERE POPUP ============ -->
+  <div class="modal-overlay" id="checkModal" hidden>
+    <div class="modal">
+      <h2 class="modal-title">출석 체크</h2>
+      <p class="modal-desc">이름을 입력하고 출석 버튼을 눌러 주세요.</p>
+      <form id="checkForm">
+        <input id="checkName" type="text" placeholder="이름" autocomplete="off" />
+        <div class="modal-actions">
+          <button type="button" class="tool" id="checkCancel">취소</button>
+          <button type="submit" class="tool primary">출석</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <div class="toast" id="toast">클립보드에 복사되었습니다</div>
@@ -791,6 +902,7 @@
       gpa: document.getElementById('view-gpa'),
       todo: document.getElementById('view-todo'),
       dday: document.getElementById('view-dday'),
+      checkhere: document.getElementById('view-checkhere'),
     };
 
     function route() {
@@ -1278,6 +1390,146 @@
     });
     calcBase.value = todayISO();
 
+    /* ============ Checkhere 출석 체크 앱 ============ */
+    const CHECK_KEY = 'happs.checkins';
+    const checkModal = document.getElementById('checkModal');
+    const checkOpenBtn = document.getElementById('checkOpenBtn');
+    const checkCancel = document.getElementById('checkCancel');
+    const checkForm = document.getElementById('checkForm');
+    const checkName = document.getElementById('checkName');
+    const checkListEl = document.getElementById('checkList');
+    const checkEmpty = document.getElementById('checkEmpty');
+    const checkCountEl = document.getElementById('checkCount');
+    const checkClear = document.getElementById('checkClear');
+    let checkins = load(CHECK_KEY, []);
+
+    // ── Google 시트 연동 설정 ─────────────────────────────────
+    // 시트에 배포한 Apps Script 웹앱 URL을 아래에 붙여넣으세요.
+    // (비워 두면 화면 명단에만 저장되고, 시트에는 기록되지 않습니다.)
+    const CHECKHERE_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyXe8YxU-nJfpNFJBwfTdocUiUCzIt0oawaCiIC9ZY6g7ELOa4KrHAsKi9v0Do5GLhz/exec';
+
+    // Apps Script 웹앱을 JSONP로 호출합니다. (CORS 우회 + 성공/실패 확인 가능)
+    function callSheet(name) {
+      return new Promise((resolve) => {
+        if (!CHECKHERE_ENDPOINT) { resolve({ ok: false, skipped: true }); return; }
+        const cb = 'checkcb_' + Date.now();
+        const s = document.createElement('script');
+        const timer = setTimeout(() => cleanup({ ok: false, error: '응답 시간 초과' }), 12000);
+        function cleanup(res) {
+          clearTimeout(timer);
+          try { delete window[cb]; } catch (e) {}
+          if (s.parentNode) s.parentNode.removeChild(s);
+          resolve(res);
+        }
+        window[cb] = (res) => cleanup(res || { ok: false, error: '빈 응답' });
+        s.onerror = () => cleanup({ ok: false, error: '네트워크 오류' });
+        s.src = CHECKHERE_ENDPOINT
+          + (CHECKHERE_ENDPOINT.includes('?') ? '&' : '?')
+          + 'name=' + encodeURIComponent(name)
+          + '&callback=' + cb;
+        document.body.appendChild(s);
+      });
+    }
+
+    // 오늘 날짜 문자열(YYYY-MM-DD) — 출석은 '오늘' 기준으로 보여줍니다.
+    function checkToday() { return todayISO(); }
+
+    function fmtCheckTime(iso) {
+      const d = new Date(iso);
+      const h = d.getHours();
+      const m = two(d.getMinutes());
+      const ampm = h < 12 ? '오전' : '오후';
+      const h12 = h % 12 === 0 ? 12 : h % 12;
+      return `${ampm} ${h12}:${m}`;
+    }
+
+    function checkRender() {
+      const today = checkToday();
+      const list = checkins
+        .filter((c) => c.date === today)
+        .sort((a, b) => new Date(b.time) - new Date(a.time)); // 최신순
+      checkListEl.innerHTML = list.map((c) => `
+        <li class="todo-item" data-id="${c.id}">
+          <div class="check" style="background:var(--accent);border-color:var(--accent);">✓</div>
+          <div class="text"></div>
+          <span class="app-cat" style="flex-shrink:0;">${fmtCheckTime(c.time)}</span>
+          <button class="del" title="삭제">×</button>
+        </li>`).join('');
+      Array.from(checkListEl.children).forEach((li, i) => {
+        li.querySelector('.text').textContent = list[i].name;
+      });
+      checkCountEl.textContent = list.length;
+      checkEmpty.hidden = list.length !== 0;
+    }
+
+    function openCheckModal() {
+      checkModal.hidden = false;
+      checkName.value = '';
+      checkName.focus();
+    }
+    function closeCheckModal() {
+      checkModal.hidden = true;
+    }
+
+    checkOpenBtn.addEventListener('click', openCheckModal);
+    checkCancel.addEventListener('click', closeCheckModal);
+    // 배경(오버레이) 클릭 시 닫기
+    checkModal.addEventListener('click', (e) => {
+      if (e.target === checkModal) closeCheckModal();
+    });
+    // ESC로 닫기
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !checkModal.hidden) closeCheckModal();
+    });
+
+    checkForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = checkName.value.trim();
+      if (!name) { checkName.focus(); return; }
+
+      const submitBtn = checkForm.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.textContent = '기록 중…';
+
+      // 1) 화면 명단(로컬)에 저장
+      const now = new Date();
+      checkins.push({ id: Date.now(), name, date: todayISO(), time: now.toISOString() });
+      save(CHECK_KEY, checkins);
+      checkRender();
+
+      // 2) Google 시트에 '출석' 기록 (가장 가까운 날짜 열 + 이름 행)
+      const res = await callSheet(name);
+
+      submitBtn.disabled = false;
+      submitBtn.textContent = '출석';
+      closeCheckModal();
+
+      if (res.skipped) {
+        showToast(`${name} 님 출석 완료! 🙋 (시트 미연동)`);
+      } else if (res.ok) {
+        showToast(`${name} 님 출석 완료! 🙋 (시트 ${res.column || ''} 기록됨)`);
+      } else if (res.notFound) {
+        showToast(`명단에서 '${name}' 님을 찾지 못했어요`);
+      } else {
+        showToast(`화면엔 저장됨 · 시트 기록 실패: ${res.error || '알 수 없음'}`);
+      }
+    });
+
+    checkListEl.addEventListener('click', (e) => {
+      if (!e.target.classList.contains('del')) return;
+      const li = e.target.closest('.todo-item');
+      checkins = checkins.filter((c) => c.id !== Number(li.dataset.id));
+      save(CHECK_KEY, checkins);
+      checkRender();
+    });
+
+    checkClear.addEventListener('click', () => {
+      const today = checkToday();
+      checkins = checkins.filter((c) => c.date !== today);
+      save(CHECK_KEY, checkins);
+      checkRender();
+    });
+
     // 초기화
     update();
     pomoRender();
@@ -1285,6 +1537,7 @@
     todoRender();
     ddayRender();
     calcRender();
+    checkRender();
     route();
   </script>
 </body>
