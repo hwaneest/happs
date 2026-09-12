@@ -1394,6 +1394,8 @@
     const CHECKHERE_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyXe8YxU-nJfpNFJBwfTdocUiUCzIt0oawaCiIC9ZY6g7ELOa4KrHAsKi9v0Do5GLhz/exec';
 
     // Apps Script 웹앱을 JSONP로 호출합니다. (CORS 우회 + 성공/실패 확인 가능)
+    // 기록 위치는 "사용자가 출석 버튼을 누른 시점의 날짜" 기준으로 정해지므로,
+    // 서버 시간대에 휘둘리지 않도록 기기의 로컬 날짜를 함께 보냅니다.
     function callSheet(name) {
       return new Promise((resolve) => {
         if (!CHECKHERE_ENDPOINT) { resolve({ ok: false, skipped: true }); return; }
@@ -1411,6 +1413,7 @@
         s.src = CHECKHERE_ENDPOINT
           + (CHECKHERE_ENDPOINT.includes('?') ? '&' : '?')
           + 'name=' + encodeURIComponent(name)
+          + '&date=' + encodeURIComponent(todayISO())
           + '&callback=' + cb;
         document.body.appendChild(s);
       });

@@ -1,10 +1,14 @@
 /**
  * Checkhere → Google 시트 출석 기록 웹앱
  *
- * 동작: 이름(name)을 받아서, 출석부 탭에서
- *   1) "오늘 날짜와 가장 가까운 날짜 열"을 찾고
+ * 동작: 이름(name)과 사용자 입력 일자(date)를 받아서, 출석부 탭에서
+ *   1) "입력 일자 이후로 가장 가까운 날짜 열"을 찾고 (입력 일자 당일 포함)
  *   2) 그 이름의 행을 찾아
  *   3) 해당 셀에 '참석'(MARK) 을 기록합니다.
+ *
+ * 덮어쓰기 규칙: 기존 값과 상관없이 항상 덮어씁니다.
+ *   ('불참'이든 이미 '참석'이든 그대로 '참석'으로 바뀝니다.
+ *    직전 값은 응답의 previous 로 돌려줍니다.)
  *
  * 배포: 확장 프로그램 → Apps Script → 이 코드 붙여넣기 →
  *       배포 → 새 배포 → 유형: 웹 앱 →
@@ -55,11 +59,13 @@ function handle(params) {
       return { ok: false, error: '시트에 데이터가 없습니다.' };
     }
 
-    // 1) 날짜 헤더 읽어서 가장 가까운 열 찾기
+    // 1) 날짜 헤더 읽어서 "입력 일자 이후로 가장 가까운 열" 찾기
     var header = sheet.getRange(HEADER_ROW, 1, 1, lastCol).getValues()[0];
     var target = params.date ? parseYMD(params.date) : new Date();
-    var best = findNearestDateCol(header, target);
-    if (!best) return { ok: false, error: '날짜 열을 찾지 못했습니다.' };
+    var best = findUpcomingDateCol(header, target);
+    if (!best) {
+      return { ok: false, noUpcoming: true, error: '아직 남아 있는 출석 일자가 없습니다.' };
+    }
 
     // 2) 이름 행 찾기
     var names = sheet.getRange(HEADER_ROW + 1, NAME_COL, lastRow - HEADER_ROW, 1).getValues();
@@ -71,7 +77,7 @@ function handle(params) {
       return { ok: false, notFound: true, error: "'" + name + "' 님을 명단에서 찾을 수 없습니다." };
     }
 
-    // 3) 출석 기록
+    // 3) 출석 기록 — 기존 값과 상관없이 항상 덮어쓴다.
     var cell = sheet.getRange(rowIndex, best.col);
     var prev = cell.getValue();
     cell.setValue(MARK);
@@ -109,20 +115,42 @@ function getSheetByGid(id, gid) {
   return null;
 }
 
-// 헤더에서 "M/D" 패턴을 뽑아, target 날짜와 가장 가까운 열을 반환
-function findNearestDateCol(header, target) {
-  var tRef = new Date(2000, target.getMonth(), target.getDate()); // 연도 무시, 월/일만 비교
-  var best = null;
+// 헤더 행에서 "M/D"가 들어 있는 열만 왼쪽부터 차례대로 뽑습니다.
+function parseHeaderDates(header) {
+  var out = [];
   for (var c = 1; c < header.length; c++) { // 0번은 이름 열
-    var text = String(header[c]);
-    var m = text.match(/(\d{1,2})\s*\/\s*(\d{1,2})/);
+    var m = String(header[c]).match(/(\d{1,2})\s*\/\s*(\d{1,2})/);
     if (!m) continue;
-    var mon = parseInt(m[1], 10) - 1;
-    var day = parseInt(m[2], 10);
-    var d = new Date(2000, mon, day);
-    var diff = Math.abs(d.getTime() - tRef.getTime());
-    if (!best || diff < best.diff) {
-      best = { col: c + 1, diff: diff }; // 열 번호는 1-based
+    out.push({ col: c + 1, mon: parseInt(m[1], 10) - 1, day: parseInt(m[2], 10) }); // 열 번호는 1-based
+  }
+  return out;
+}
+
+// target(사용자 입력 일자) 이후로 가장 가까운 날짜 열을 반환합니다. (당일 포함)
+//
+// 헤더에는 연도가 없으므로, 열이 날짜 순으로 놓여 있다는 점을 이용해
+// 앞 열보다 날짜가 뒤로 가면(12/16 → 1/6) 해가 바뀐 것으로 보고 연도를 채웁니다.
+// 기준 연도는 target 연도와 그 전 해를 함께 해석해 보고,
+// 그중 target 이후로 가장 빠른 날짜가 나오는 열을 고릅니다.
+// (다음 해까지 넓히지 않으므로, 마지막 일자가 지나면 첫 열로 되돌아가지 않고
+//  '남은 일자 없음'이 됩니다.)
+function findUpcomingDateCol(header, target) {
+  var tRef = new Date(target.getFullYear(), target.getMonth(), target.getDate()).getTime();
+  var cells = parseHeaderDates(header);
+  if (!cells.length) return null;
+
+  var best = null;
+  var offsets = [-1, 0];
+  for (var o = 0; o < offsets.length; o++) {
+    var year = target.getFullYear() + offsets[o];
+    var prev = null;
+    for (var i = 0; i < cells.length; i++) {
+      var cur = cells[i];
+      if (prev && (cur.mon < prev.mon || (cur.mon === prev.mon && cur.day < prev.day))) year++;
+      prev = cur;
+      var t = new Date(year, cur.mon, cur.day).getTime();
+      if (t < tRef) continue;               // 이미 지난 일자는 건너뜀
+      if (!best || t < best.time) best = { col: cur.col, time: t };
     }
   }
   return best;
