@@ -1,14 +1,14 @@
 /**
  * Checkhere → Google 시트 출석 기록 웹앱
  *
- * 동작: 이름(name)과 사용자 입력 일자(date)를 받아서, 출석부 탭에서
+ * 동작: 이름(name), 참석 여부(status), 사용자 입력 일자(date)를 받아서, 출석부 탭에서
  *   1) "입력 일자 이후로 가장 가까운 날짜 열"을 찾고 (입력 일자 당일 포함)
  *   2) 그 이름의 행을 찾아
- *   3) 해당 셀에 '참석'(MARK) 을 기록합니다.
+ *   3) 해당 셀에 '참석' 또는 '불참'(status) 을 기록합니다.
+ *      (status 가 없으면 예전 버전과 같이 '참석'으로 기록합니다.)
  *
  * 덮어쓰기 규칙: 기존 값과 상관없이 항상 덮어씁니다.
- *   ('불참'이든 이미 '참석'이든 그대로 '참석'으로 바뀝니다.
- *    직전 값은 응답의 previous 로 돌려줍니다.)
+ *   (직전 값은 응답의 previous 로 돌려줍니다.)
  *
  * 배포: 확장 프로그램 → Apps Script → 이 코드 붙여넣기 →
  *       배포 → 새 배포 → 유형: 웹 앱 →
@@ -19,7 +19,8 @@
 // ── 설정 ────────────────────────────────────────────────
 var SHEET_ID = '1wNtGsxZAWl9Rx_EhaYCgpToGx6JOGXcOpi7QjrtZWrA';
 var SHEET_GID = 127070871;   // 출석부 탭 gid
-var MARK = '참석';            // 셀에 기록할 글자
+var MARKS = ['참석', '불참'];  // 셀에 기록할 수 있는 글자
+var DEFAULT_MARK = '참석';     // status 가 없을 때 기록할 글자
 var NAME_COL = 1;            // 이름이 들어 있는 열 (A=1)
 var HEADER_ROW = 1;          // 날짜 헤더가 있는 행
 
@@ -49,6 +50,11 @@ function handle(params) {
   try {
     var name = normalize(params.name);
     if (!name) return { ok: false, error: '이름이 비어 있습니다.' };
+
+    var mark = params.status ? String(params.status).trim() : DEFAULT_MARK;
+    if (MARKS.indexOf(mark) === -1) {
+      return { ok: false, error: "참석 여부는 '참석' 또는 '불참'이어야 합니다." };
+    }
 
     var sheet = getSheetByGid(SHEET_ID, SHEET_GID);
     if (!sheet) return { ok: false, error: '출석부 탭을 찾을 수 없습니다.' };
@@ -80,13 +86,13 @@ function handle(params) {
     // 3) 출석 기록 — 기존 값과 상관없이 항상 덮어쓴다.
     var cell = sheet.getRange(rowIndex, best.col);
     var prev = cell.getValue();
-    cell.setValue(MARK);
+    cell.setValue(mark);
 
     return {
       ok: true,
       matchedName: normalize(names[rowIndex - HEADER_ROW - 1][0]),
       column: String(header[best.col - 1]).trim(),
-      mark: MARK,
+      mark: mark,
       previous: prev === '' ? null : prev
     };
   } catch (err) {

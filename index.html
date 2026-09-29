@@ -229,6 +229,7 @@
     button.tool:hover { border-color: var(--accent); color: var(--accent); }
     button.tool.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
     button.tool.primary:hover { opacity: 0.9; color: #fff; }
+    button.tool:disabled, button.tool:disabled:hover { opacity: 0.45; cursor: not-allowed; }
 
     /* ===== Counter stats ===== */
     .grid { display: grid; gap: 12px; margin-top: 20px; }
@@ -311,6 +312,26 @@
     }
     .modal input:focus { border-color: var(--accent); }
     .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+    .modal input::placeholder { color: var(--muted); opacity: 0.7; }
+    .choice-group { display: flex; gap: 10px; border: none; margin: 0; padding: 0; }
+    .choice {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .choice input { width: auto; margin: 0; accent-color: var(--accent); }
+    .choice:has(input:checked) { border-color: var(--accent); }
+    .choice:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
 
     /* ===== Pomodoro ===== */
     .pomo { max-width: 420px; margin: 0 auto; text-align: center; --pomo-accent: var(--accent); }
@@ -854,7 +875,7 @@
 
       <header class="app-header">
         <h1>Attendance Check Page</h1>
-        <p>버튼을 누르면 팝업이 열립니다. 이름을 넣으면 출석 완료! 🙋</p>
+        <p>버튼을 누르고 이름을 넣은 뒤, 참석/불참을 고르면 출석 완료! 🙋</p>
       </header>
 
       <div class="editor-card" style="text-align:center;">
@@ -866,13 +887,27 @@
   <!-- ============ CHECKHERE POPUP ============ -->
   <div class="modal-overlay" id="checkModal" hidden>
     <div class="modal">
-      <h2 class="modal-title">출석 체크</h2>
-      <p class="modal-desc">이름을 입력하고 출석 버튼을 눌러 주세요.</p>
-      <form id="checkForm">
-        <input id="checkName" type="text" placeholder="이름" autocomplete="off" />
+      <!-- 1단계: 이름 입력 -->
+      <form id="checkNameForm">
+        <h2 class="modal-title">출석 체크</h2>
+        <p class="modal-desc">이름을 입력하고 다음 버튼을 눌러 주세요.</p>
+        <input id="checkName" type="text" placeholder="홍길동" autocomplete="off" />
         <div class="modal-actions">
           <button type="button" class="tool" id="checkCancel">취소</button>
-          <button type="submit" class="tool primary">출석</button>
+          <button type="submit" class="tool primary">다음</button>
+        </div>
+      </form>
+      <!-- 2단계: 참석/불참 선택 -->
+      <form id="checkStatusForm" hidden>
+        <h2 class="modal-title">참석/불참 선택</h2>
+        <p class="modal-desc"><span id="checkWho"></span> 님, 참석 여부를 골라 주세요.</p>
+        <fieldset class="choice-group">
+          <label class="choice"><input type="radio" name="checkStatus" value="참석" /> 참석</label>
+          <label class="choice"><input type="radio" name="checkStatus" value="불참" /> 불참</label>
+        </fieldset>
+        <div class="modal-actions">
+          <button type="button" class="tool" id="checkBack">이전</button>
+          <button type="submit" class="tool primary" id="checkConfirm" disabled>확인</button>
         </div>
       </form>
     </div>
@@ -1385,8 +1420,12 @@
     const checkModal = document.getElementById('checkModal');
     const checkOpenBtn = document.getElementById('checkOpenBtn');
     const checkCancel = document.getElementById('checkCancel');
-    const checkForm = document.getElementById('checkForm');
+    const checkNameForm = document.getElementById('checkNameForm');
+    const checkStatusForm = document.getElementById('checkStatusForm');
     const checkName = document.getElementById('checkName');
+    const checkWho = document.getElementById('checkWho');
+    const checkBack = document.getElementById('checkBack');
+    const checkConfirm = document.getElementById('checkConfirm');
 
     // ── Google 시트 연동 설정 ─────────────────────────────────
     // 시트에 배포한 Apps Script 웹앱 URL을 아래에 붙여넣으세요.
@@ -1394,9 +1433,9 @@
     const CHECKHERE_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyXe8YxU-nJfpNFJBwfTdocUiUCzIt0oawaCiIC9ZY6g7ELOa4KrHAsKi9v0Do5GLhz/exec';
 
     // Apps Script 웹앱을 JSONP로 호출합니다. (CORS 우회 + 성공/실패 확인 가능)
-    // 기록 위치는 "사용자가 출석 버튼을 누른 시점의 날짜" 기준으로 정해지므로,
+    // 기록 위치는 "사용자가 확인 버튼을 누른 시점의 날짜" 기준으로 정해지므로,
     // 서버 시간대에 휘둘리지 않도록 기기의 로컬 날짜를 함께 보냅니다.
-    function callSheet(name) {
+    function callSheet(name, status) {
       return new Promise((resolve) => {
         if (!CHECKHERE_ENDPOINT) { resolve({ ok: false, skipped: true }); return; }
         const cb = 'checkcb_' + Date.now();
@@ -1413,16 +1452,22 @@
         s.src = CHECKHERE_ENDPOINT
           + (CHECKHERE_ENDPOINT.includes('?') ? '&' : '?')
           + 'name=' + encodeURIComponent(name)
+          + '&status=' + encodeURIComponent(status)
           + '&date=' + encodeURIComponent(todayISO())
           + '&callback=' + cb;
         document.body.appendChild(s);
       });
     }
 
+    function showNameStep() {
+      checkStatusForm.hidden = true;
+      checkNameForm.hidden = false;
+      checkName.focus();
+    }
     function openCheckModal() {
       checkModal.hidden = false;
       checkName.value = '';
-      checkName.focus();
+      showNameStep();
     }
     function closeCheckModal() {
       checkModal.hidden = true;
@@ -1439,20 +1484,40 @@
       if (e.key === 'Escape' && !checkModal.hidden) closeCheckModal();
     });
 
-    checkForm.addEventListener('submit', async (e) => {
+    // 1단계 → 2단계: 이름을 받고 참석/불참 선택 창으로
+    checkNameForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const name = checkName.value.trim();
       if (!name) { checkName.focus(); return; }
 
-      const submitBtn = checkForm.querySelector('button[type="submit"]');
-      submitBtn.disabled = true;
-      submitBtn.textContent = '기록 중…';
+      checkWho.textContent = name;
+      checkStatusForm.reset();
+      checkConfirm.disabled = true;
+      checkNameForm.hidden = true;
+      checkStatusForm.hidden = false;
+      checkStatusForm.querySelector('input[name="checkStatus"]').focus();
+    });
+    checkBack.addEventListener('click', showNameStep);
+    // 참석/불참을 골라야 확인 버튼이 눌립니다.
+    checkStatusForm.addEventListener('change', () => {
+      checkConfirm.disabled = !checkStatusForm.checkStatus.value;
+    });
 
-      // Google 시트에 '출석' 기록 (가장 가까운 날짜 열 + 이름 행)
-      const res = await callSheet(name);
+    // 2단계: 확인 → Google 시트에 '참석'/'불참' 기록 (가장 가까운 날짜 열 + 이름 행)
+    checkStatusForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = checkName.value.trim();
+      const status = checkStatusForm.checkStatus.value;
+      if (!name || !status) return;
 
-      submitBtn.disabled = false;
-      submitBtn.textContent = '출석';
+      checkConfirm.disabled = true;
+      checkBack.disabled = true;
+      checkConfirm.textContent = '기록 중…';
+
+      const res = await callSheet(name, status);
+
+      checkConfirm.textContent = '확인';
+      checkBack.disabled = false;
       closeCheckModal();
 
       if (res.ok) {
