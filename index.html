@@ -470,6 +470,76 @@
     .calc-result strong { color: var(--accent); }
     .calc-result .big { font-size: 19px; font-weight: 800; letter-spacing: -0.01em; }
     .calc-result .muted { color: var(--muted); font-size: 14px; }
+
+    /* ===== Contact ===== */
+    .contact {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+      gap: 40px;
+      align-items: start;
+    }
+    @media (max-width: 820px) {
+      .contact { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+    }
+    .contact-title { font-size: 44px; font-weight: 900; letter-spacing: -0.03em; margin: 12px 0 14px; line-height: 1.1; }
+    .contact-lead { color: var(--muted); font-size: 15.5px; margin: 0 0 32px; word-break: keep-all; }
+    .contact-meta { margin-bottom: 24px; }
+    .contact-label { font-size: 12.5px; font-weight: 700; letter-spacing: 0.16em; color: var(--muted); margin-bottom: 6px; }
+    .contact-value { font-size: 17px; font-weight: 600; color: var(--text); text-decoration: none; word-break: break-all; }
+    a.contact-value:hover { text-decoration: underline; }
+    .contact-links { display: flex; gap: 10px; margin-top: 8px; }
+    .contact-chip {
+      font-size: 14.5px; font-weight: 700; color: var(--text); text-decoration: none;
+      padding: 10px 22px; border: 1px solid var(--border); border-radius: 999px; background: var(--card);
+      transition: border-color 0.15s ease;
+    }
+    .contact-chip:hover { border-color: var(--text); }
+    .contact-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 28px;
+    }
+    @media (max-width: 640px) { .contact-card { padding: 20px; } }
+    .contact-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 16px; }
+    @media (max-width: 520px) { .contact-grid { grid-template-columns: minmax(0, 1fr); } }
+    .contact-field { display: flex; flex-direction: column; gap: 8px; }
+    .contact-field.full { grid-column: 1 / -1; }
+    .contact-field label { font-size: 14px; font-weight: 700; }
+    .contact-field .req { color: #e5484d; }
+    .contact-field input, .contact-field select, .contact-field textarea {
+      width: 100%;
+      padding: 13px 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--card);
+      color: var(--text);
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+    .contact-field textarea { min-height: 140px; line-height: 1.6; resize: vertical; }
+    .contact-field input::placeholder, .contact-field textarea::placeholder { color: var(--muted); opacity: 0.8; }
+    .contact-field input:focus, .contact-field select:focus, .contact-field textarea:focus { border-color: var(--text); }
+    .contact-field .invalid { border-color: #e5484d; }
+    .contact-submit {
+      width: 100%;
+      margin-top: 22px;
+      padding: 16px;
+      border: none;
+      border-radius: 999px;
+      background: var(--text);
+      color: var(--bg);
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s ease;
+    }
+    .contact-submit:hover { opacity: 0.88; }
+    .contact-submit:disabled { opacity: 0.5; cursor: progress; }
   </style>
 </head>
 <body>
@@ -584,6 +654,21 @@
             </div>
           </div>
           <p class="app-desc">팝업창에 이름을 입력하면 시간과 함께 출석이 기록되는 간단한 출석 체크 앱입니다.</p>
+          <div class="app-action">
+            <span class="pill">열기</span>
+          </div>
+        </a>
+
+        <a class="app available" href="#contact"
+           data-name="Contact 문의 컨택트 연락 이메일 email 멘토링 강의 강연 그룹클래스">
+          <div class="app-top">
+            <div class="app-icon" style="background:#fff4e5;">✉️</div>
+            <div>
+              <p class="app-name">Contact</p>
+              <div class="app-cat">문의하기</div>
+            </div>
+          </div>
+          <p class="app-desc">멘토링·강의 문의 양식을 작성해 보내면 담당자 이메일로 바로 전달됩니다.</p>
           <div class="app-action">
             <span class="pill">열기</span>
           </div>
@@ -882,6 +967,77 @@
         <button class="btn-primary" id="checkOpenBtn" style="border-radius:14px; padding:14px 46px; font-family:inherit; font-weight:700; font-size:16px; background:var(--accent); color:#fff; border:none; cursor:pointer;">출석 체크하기</button>
       </div>
     </section>
+
+    <!-- ============ CONTACT APP VIEW ============ -->
+    <section id="view-contact" hidden>
+      <button class="back" data-nav="#store">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        앱 목록
+      </button>
+
+      <div class="contact">
+        <div class="contact-info">
+          <h1 class="contact-title">CONTACT</h1>
+          <p class="contact-lead">
+            멘토링·강의 및 그룹클래스 요청을 환영합니다.<br />
+            아래 이메일로 연락 주시거나 양식을 작성 후 제출해 주세요.
+          </p>
+          <div class="contact-meta">
+            <div class="contact-label">EMAIL</div>
+            <a class="contact-value" href="mailto:volunteerhwan@gmail.com">volunteerhwan@gmail.com</a>
+          </div>
+          <div class="contact-meta">
+            <div class="contact-label">AFFILIATION</div>
+            <div class="contact-value">Seoul National University (SNU)</div>
+          </div>
+          <div class="contact-links">
+            <a class="contact-chip" href="mailto:volunteerhwan@gmail.com">Email</a>
+          </div>
+        </div>
+
+        <form class="contact-card" id="contactForm" novalidate>
+          <div class="contact-grid">
+            <div class="contact-field">
+              <label for="ctOrg">소속/기관</label>
+              <input id="ctOrg" name="org" type="text" placeholder="소속" autocomplete="organization" />
+            </div>
+            <div class="contact-field">
+              <label for="ctName">이름 <span class="req">*</span></label>
+              <input id="ctName" name="name" type="text" placeholder="이름" autocomplete="name" required />
+            </div>
+            <div class="contact-field">
+              <label for="ctPhone">연락처</label>
+              <input id="ctPhone" name="phone" type="tel" placeholder="010-0000-0000" autocomplete="tel" />
+            </div>
+            <div class="contact-field">
+              <label for="ctEmail">이메일 <span class="req">*</span></label>
+              <input id="ctEmail" name="email" type="email" placeholder="you@example.com" autocomplete="email" required />
+            </div>
+            <div class="contact-field">
+              <label for="ctType">문의 유형</label>
+              <select id="ctType" name="type">
+                <option>멘토링 신청</option>
+                <option>강연·강의 요청</option>
+                <option>그룹클래스 요청</option>
+                <option>기타 문의</option>
+              </select>
+            </div>
+            <div class="contact-field">
+              <label for="ctSchedule">희망 일정</label>
+              <input id="ctSchedule" name="schedule" type="text" placeholder="예: 2026년 11월" />
+            </div>
+            <div class="contact-field full">
+              <label for="ctMessage">내용 <span class="req">*</span></label>
+              <textarea id="ctMessage" name="message" placeholder="주제, 대상, 목적 등을 자유롭게 알려주세요." required></textarea>
+            </div>
+          </div>
+          <button type="submit" class="contact-submit" id="contactSubmit">문의 보내기 →</button>
+        </form>
+      </div>
+    </section>
   </div>
 
   <!-- ============ CHECKHERE POPUP ============ -->
@@ -925,6 +1081,7 @@
       todo: document.getElementById('view-todo'),
       dday: document.getElementById('view-dday'),
       checkhere: document.getElementById('view-checkhere'),
+      contact: document.getElementById('view-contact'),
     };
 
     function route() {
@@ -1524,6 +1681,80 @@
         showToast('출석체크가 완료되었습니다!');
       } else {
         showToast('출석이 되지 않았습니다. 구글 스프레드시트에서 출석체크해 주세요. (문의: 김동환 님)');
+      }
+    });
+
+    /* ============ Contact 앱 ============ */
+    const contactForm = document.getElementById('contactForm');
+    const contactSubmit = document.getElementById('contactSubmit');
+
+    // ── 이메일 발송 설정 ─────────────────────────────────────
+    // Contact.gs 를 Apps Script 웹앱으로 배포한 뒤 URL을 아래에 붙여넣으세요.
+    // (비워 두면 메일 앱이 열리며 작성한 내용이 채워진 메일 초안으로 대신 보냅니다.)
+    const CONTACT_ENDPOINT = '';
+    const CONTACT_TO = 'volunteerhwan@gmail.com';
+
+    const CONTACT_FIELDS = [
+      ['org', '소속/기관'], ['name', '이름'], ['phone', '연락처'], ['email', '이메일'],
+      ['type', '문의 유형'], ['schedule', '희망 일정'], ['message', '내용'],
+    ];
+
+    function contactData() {
+      const data = {};
+      CONTACT_FIELDS.forEach(([key]) => { data[key] = contactForm.elements[key].value.trim(); });
+      return data;
+    }
+
+    // 필수 항목(이름·이메일·내용)이 비었거나 이메일 형식이 틀리면 첫 칸으로 포커스
+    function contactValidate(data) {
+      const bad = [];
+      if (!data.name) bad.push('name');
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) bad.push('email');
+      if (!data.message) bad.push('message');
+      CONTACT_FIELDS.forEach(([key]) => {
+        contactForm.elements[key].classList.toggle('invalid', bad.includes(key));
+      });
+      if (bad.length) contactForm.elements[bad[0]].focus();
+      return bad.length === 0;
+    }
+
+    // Apps Script 웹앱에 폼 데이터를 POST 합니다.
+    // (form-urlencoded 는 preflight 없이 보내지고, 응답 JSON도 읽을 수 있습니다.)
+    async function sendContact(data) {
+      try {
+        const res = await fetch(CONTACT_ENDPOINT, { method: 'POST', body: new URLSearchParams(data) });
+        return await res.json();
+      } catch (err) {
+        return { ok: false, error: String(err) };
+      }
+    }
+
+    function openContactMail(data) {
+      const subject = `[문의] ${data.type} - ${data.name}`;
+      const body = CONTACT_FIELDS.map(([key, label]) => `${label}: ${data[key] || '-'}`).join('\n');
+      location.href = `mailto:${CONTACT_TO}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    }
+
+    contactForm.addEventListener('input', (e) => e.target.classList.remove('invalid'));
+
+    contactForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = contactData();
+      if (!contactValidate(data)) { showToast('이름, 이메일, 내용을 확인해 주세요.'); return; }
+
+      if (!CONTACT_ENDPOINT) { openContactMail(data); return; }
+
+      contactSubmit.disabled = true;
+      contactSubmit.textContent = '보내는 중…';
+      const res = await sendContact(data);
+      contactSubmit.disabled = false;
+      contactSubmit.textContent = '문의 보내기 →';
+
+      if (res.ok) {
+        contactForm.reset();
+        showToast('문의가 전송되었습니다. 곧 연락드릴게요!');
+      } else {
+        showToast(`전송에 실패했습니다. ${CONTACT_TO} 로 직접 메일 보내 주세요.`);
       }
     });
 
