@@ -186,6 +186,20 @@
     .app-header h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -0.02em; }
     .app-header p { margin: 0; color: var(--muted); font-size: 14px; }
 
+    /* ===== 조회수 ===== */
+    .views {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 10px;
+      padding: 4px 11px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--muted);
+      font-size: 12.5px;
+    }
+    .views strong { color: var(--accent); font-variant-numeric: tabular-nums; }
+
     /* ===== Counter editor ===== */
     .editor-card {
       background: var(--card);
@@ -540,6 +554,7 @@
         <div>
           <h1>HAPPS</h1>
           <p>내가 만든 앱을 한곳에 모아 두는 나만의 앱스토어</p>
+          <div class="views" data-views="store">조회수 <strong>–</strong></div>
         </div>
       </div>
 
@@ -695,6 +710,7 @@
       <header class="app-header">
         <h1>글자수 카운터</h1>
         <p>입력하는 즉시 글자 수를 계산해 드립니다. 🙂</p>
+        <div class="views" data-views="counter">조회수 <strong>–</strong></div>
       </header>
 
       <div class="editor-card">
@@ -756,6 +772,7 @@
       <header class="app-header">
         <h1>뽀모도로 타이머</h1>
         <p>25분 집중하고 잠깐 쉬며, 몰입의 리듬을 만들어 보세요. 🍅</p>
+        <div class="views" data-views="pomodoro">조회수 <strong>–</strong></div>
       </header>
 
       <div class="pomo">
@@ -802,6 +819,7 @@
       <header class="app-header">
         <h1>학점 변환기</h1>
         <p>내 학점을 다른 만점 기준으로 환산해 보세요. 🎓</p>
+        <div class="views" data-views="gpa">조회수 <strong>–</strong></div>
       </header>
 
       <div class="editor-card">
@@ -857,6 +875,7 @@
       <header class="app-header">
         <h1>할 일 목록</h1>
         <p>할 일을 적어 두고 하나씩 지워 보세요. 자동 저장됩니다. ✅</p>
+        <div class="views" data-views="todo">조회수 <strong>–</strong></div>
       </header>
 
       <div class="editor-card">
@@ -894,6 +913,7 @@
       <header class="app-header">
         <h1>D-Day 계산기</h1>
         <p>며칠 남았는지 세고, 며칠 전·후가 언제인지도 계산해 보세요. 📅</p>
+        <div class="views" data-views="dday">조회수 <strong>–</strong></div>
       </header>
 
       <!-- 날짜 계산: 기준일 ± 일수 = 결과 날짜 (양방향) -->
@@ -950,6 +970,7 @@
       <header class="app-header">
         <h1>Attendance Check Page</h1>
         <p>버튼을 누르고 이름을 넣은 뒤, 참석/불참을 고르면 출석 완료! 🙋</p>
+        <div class="views" data-views="checkhere">조회수 <strong>–</strong></div>
       </header>
 
       <div class="editor-card" style="text-align:center;">
@@ -974,6 +995,7 @@
             멘토링·커피챗·강의 및 그룹클래스 요청을 환영합니다.<br />
             양식을 작성 후 제출해 주세요.
           </p>
+          <div class="views" data-views="contact">조회수 <strong>–</strong></div>
         </div>
 
         <form class="contact-card" id="contactForm" novalidate>
@@ -1069,6 +1091,33 @@
         elm.hidden = name !== target;
       });
       window.scrollTo(0, 0);
+      countView(target);
+    }
+
+    /* ============ 조회수 (페이지마다 누적, 방문할 때마다 +1) ============ */
+    // Views.gs 를 Apps Script 웹앱으로 배포한 뒤 URL을 아래에 붙여넣으세요.
+    // (비워 두면 조회수 배지가 숨겨집니다.)
+    const VIEWS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwsQoO3lS9wB6Ao-P0KECTOr7d4ylbXdz0IoY8kSVbikIRxh37k8gbuOPM7VRkL5z4Z/exec';
+
+    // Apps Script 웹앱을 JSONP로 호출해 해당 페이지 조회수를 1 올리고 새 값을 받습니다.
+    function countView(page) {
+      const badge = document.querySelector(`[data-views="${page}"]`);
+      if (!badge) return;
+      if (!VIEWS_ENDPOINT) { badge.hidden = true; return; }
+
+      const cb = 'viewscb_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
+      const s = document.createElement('script');
+      const timer = setTimeout(() => cleanup(null), 10000);
+      function cleanup(res) {
+        clearTimeout(timer);
+        try { delete window[cb]; } catch (e) {}
+        if (s.parentNode) s.parentNode.removeChild(s);
+        if (res && res.ok) badge.querySelector('strong').textContent = res.views.toLocaleString('ko-KR');
+      }
+      window[cb] = cleanup;
+      s.onerror = () => cleanup(null);
+      s.src = VIEWS_ENDPOINT + '?page=' + encodeURIComponent(page) + '&callback=' + cb;
+      document.body.appendChild(s);
     }
     window.addEventListener('hashchange', route);
 
