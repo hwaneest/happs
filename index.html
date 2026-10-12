@@ -1668,9 +1668,7 @@
 
     // ── 이메일 발송 설정 ─────────────────────────────────────
     // Contact.gs 를 Apps Script 웹앱으로 배포한 뒤 URL을 아래에 붙여넣으세요.
-    // (비워 두면 메일 앱이 열리며 작성한 내용이 채워진 메일 초안으로 대신 보냅니다.)
     const CONTACT_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyXhP_du8HBPFhNNk_1DKsmwsWM5ilt0WtqUnUcklk-IyHqxFS5XVLtE-ZLlk6bNIMh/exec';
-    const CONTACT_TO = 'volunteerhwan@gmail.com';
 
     const CONTACT_FIELDS = [
       ['org', '소속/기관'], ['name', '이름'], ['phone', '연락처'], ['email', '이메일'],
@@ -1707,20 +1705,12 @@
       }
     }
 
-    function openContactMail(data) {
-      const subject = `[문의] ${data.type} - ${data.name}`;
-      const body = CONTACT_FIELDS.map(([key, label]) => `${label}: ${data[key] || '-'}`).join('\n');
-      location.href = `mailto:${CONTACT_TO}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    }
-
     contactForm.addEventListener('input', (e) => e.target.classList.remove('invalid'));
 
     contactForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const data = contactData();
       if (!contactValidate(data)) { showToast('이름, 이메일, 내용을 확인해 주세요.'); return; }
-
-      if (!CONTACT_ENDPOINT) { openContactMail(data); return; }
 
       contactSubmit.disabled = true;
       contactSubmit.textContent = '보내는 중…';
