@@ -160,6 +160,8 @@
       color: #fff;
     }
     .app.available:hover .pill { opacity: 0.9; }
+    .card-views { font-size: 12.5px; color: var(--muted); }
+    .card-views strong { color: var(--text); font-variant-numeric: tabular-nums; }
     .pill.soon { background: transparent; color: var(--muted); border: 1px solid var(--border); }
     .app.soon { opacity: 0.7; }
     .empty { text-align: center; color: var(--muted); padding: 48px 0; font-size: 15px; }
@@ -585,6 +587,7 @@
           <p class="app-desc">입력하는 즉시 글자 수, 단어 수, 원고지 매수까지 실시간으로 계산합니다.</p>
           <div class="app-action">
             <span class="pill">열기</span>
+            <span class="card-views" data-card-views="counter">조회수 <strong>–</strong></span>
           </div>
         </a>
 
@@ -600,6 +603,7 @@
           <p class="app-desc">25분 집중과 휴식을 반복하며 몰입을 돕는 뽀모도로 타이머입니다.</p>
           <div class="app-action">
             <span class="pill">열기</span>
+            <span class="card-views" data-card-views="pomodoro">조회수 <strong>–</strong></span>
           </div>
         </a>
 
@@ -615,6 +619,7 @@
           <p class="app-desc">4.0·4.3·4.5·5.0 만점 학점을 서로 환산하고 백분율까지 계산합니다.</p>
           <div class="app-action">
             <span class="pill">열기</span>
+            <span class="card-views" data-card-views="gpa">조회수 <strong>–</strong></span>
           </div>
         </a>
 
@@ -630,6 +635,7 @@
           <p class="app-desc">할 일을 추가·완료·삭제하고 브라우저에 자동 저장되는 투두 리스트입니다.</p>
           <div class="app-action">
             <span class="pill">열기</span>
+            <span class="card-views" data-card-views="todo">조회수 <strong>–</strong></span>
           </div>
         </a>
 
@@ -645,6 +651,7 @@
           <p class="app-desc">시험·기념일까지 남은 일수를 계산하고 여러 개를 목록으로 관리합니다.</p>
           <div class="app-action">
             <span class="pill">열기</span>
+            <span class="card-views" data-card-views="dday">조회수 <strong>–</strong></span>
           </div>
         </a>
 
@@ -660,6 +667,7 @@
           <p class="app-desc">팝업창에 이름을 입력하면 시간과 함께 출석이 기록되는 간단한 출석 체크 앱입니다.</p>
           <div class="app-action">
             <span class="pill">열기</span>
+            <span class="card-views" data-card-views="checkhere">조회수 <strong>–</strong></span>
           </div>
         </a>
 
@@ -675,6 +683,7 @@
           <p class="app-desc">멘토링·강의 문의 양식을 작성해 보내면 담당자 이메일로 바로 전달됩니다.</p>
           <div class="app-action">
             <span class="pill">열기</span>
+            <span class="card-views" data-card-views="contact">조회수 <strong>–</strong></span>
           </div>
         </a>
 
@@ -1099,11 +1108,18 @@
     // (비워 두면 조회수 배지가 숨겨집니다.)
     const VIEWS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwsQoO3lS9wB6Ao-P0KECTOr7d4ylbXdz0IoY8kSVbikIRxh37k8gbuOPM7VRkL5z4Z/exec';
 
+    const fmtViews = (n) => n.toLocaleString('ko-KR');
+
     // Apps Script 웹앱을 JSONP로 호출해 해당 페이지 조회수를 1 올리고 새 값을 받습니다.
+    // 홈(store)에서는 앱 카드에 보여 줄 앱별 조회수(all)도 함께 받습니다.
     function countView(page) {
       const badge = document.querySelector(`[data-views="${page}"]`);
       if (!badge) return;
-      if (!VIEWS_ENDPOINT) { badge.hidden = true; return; }
+      if (!VIEWS_ENDPOINT) {
+        badge.hidden = true;
+        document.querySelectorAll('[data-card-views]').forEach((el) => { el.hidden = true; });
+        return;
+      }
 
       const cb = 'viewscb_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
       const s = document.createElement('script');
@@ -1112,11 +1128,18 @@
         clearTimeout(timer);
         try { delete window[cb]; } catch (e) {}
         if (s.parentNode) s.parentNode.removeChild(s);
-        if (res && res.ok) badge.querySelector('strong').textContent = res.views.toLocaleString('ko-KR');
+        if (!res || !res.ok) return;
+        badge.querySelector('strong').textContent = fmtViews(res.views);
+        Object.entries(res.all || {}).forEach(([key, n]) => {
+          const card = document.querySelector(`[data-card-views="${key}"] strong`);
+          if (card) card.textContent = fmtViews(n);
+        });
       }
       window[cb] = cleanup;
       s.onerror = () => cleanup(null);
-      s.src = VIEWS_ENDPOINT + '?page=' + encodeURIComponent(page) + '&callback=' + cb;
+      s.src = VIEWS_ENDPOINT + '?page=' + encodeURIComponent(page)
+        + (page === 'store' ? '&all=1' : '')
+        + '&callback=' + cb;
       document.body.appendChild(s);
     }
     window.addEventListener('hashchange', route);
