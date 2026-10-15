@@ -1139,8 +1139,50 @@
       s.onerror = () => cleanup(null);
       s.src = VIEWS_ENDPOINT + '?page=' + encodeURIComponent(page)
         + (page === 'store' ? '&all=1' : '')
+        + '&' + new URLSearchParams(visitInfo())
         + '&callback=' + cb;
       document.body.appendChild(s);
+    }
+
+    // 관리자 통계(admin.html)에 쓰이는 방문 정보.
+    // 방문자 번호는 이 브라우저에만 저장되는 무작위 값입니다.
+    function visitInfo() {
+      const info = {};
+      let isNew = false;
+      try {
+        if (localStorage.getItem('happs_notrack') === '1') info.nt = 1;  // 관리자 본인 방문 제외
+        let vid = localStorage.getItem('happs_vid');
+        if (!vid) {
+          vid = Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+          localStorage.setItem('happs_vid', vid);
+          isNew = true;
+        }
+        info.vid = vid;
+      } catch (e) {}
+      if (isNew) info.nv = 1;
+      // 유입 경로: 이 탭에 처음 들어올 때의 외부 사이트 주소(도메인만)
+      try {
+        if (!sessionStorage.getItem('happs_ref')) {
+          let ref = '';
+          try { const r = new URL(document.referrer); if (r.host !== location.host) ref = r.hostname.replace(/^www\./, ''); } catch (e) {}
+          sessionStorage.setItem('happs_ref', ref || '-');
+        }
+        const ref = sessionStorage.getItem('happs_ref');
+        if (ref && ref !== '-') info.ref = ref;
+      } catch (e) {}
+
+      const ua = navigator.userAgent;
+      info.dev = /iPad|Tablet/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) ? 'tablet'
+        : /Mobi|Android|iPhone/i.test(ua) ? 'mobile' : 'desktop';
+      info.br = /Edg\//.test(ua) ? 'Edge' : /SamsungBrowser/.test(ua) ? 'Samsung'
+        : /NAVER|Whale/.test(ua) ? 'Naver/Whale' : /KAKAOTALK/i.test(ua) ? 'KakaoTalk'
+        : /Firefox|FxiOS/.test(ua) ? 'Firefox' : /Chrome|CriOS/.test(ua) ? 'Chrome'
+        : /Safari/.test(ua) ? 'Safari' : 'Other';
+      info.os = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) ? 'iOS'
+        : /Android/.test(ua) ? 'Android' : /Windows/.test(ua) ? 'Windows'
+        : /Mac OS X/.test(ua) ? 'macOS' : /Linux/.test(ua) ? 'Linux' : 'Other';
+      info.lang = (navigator.language || '').slice(0, 10);
+      return info;
     }
     window.addEventListener('hashchange', route);
 
