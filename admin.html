@@ -1009,7 +1009,6 @@
       state.key = key;
       state.demo = false;
       await load();
-      if (state.data) setItem('sessionStorage', 'happs_admin_key', key);
       $('loginBtn').disabled = false;
     });
     $('demoBtn').addEventListener('click', () => { state.demo = true; load(); });
@@ -1071,8 +1070,11 @@
     }
 
     /* ============ 시작 ============ */
-    state.key = getItem('sessionStorage', 'happs_admin_key');
-    if (state.key) load(); else logout();
+    // 비밀번호는 저장하지 않습니다. 관리자 화면을 열 때마다 새로 입력해야 합니다.
+    setItem('sessionStorage', 'happs_admin_key', null);  // 예전 버전이 남긴 값 지우기
+    logout();
+    // 뒤로가기로 돌아와 이전 화면이 그대로 복원된 경우에도 다시 잠급니다.
+    window.addEventListener('pageshow', (e) => { if (e.persisted) logout(); });
   </script>
 </body>
 </html>
