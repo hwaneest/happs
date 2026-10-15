@@ -167,6 +167,8 @@
     .empty { text-align: center; color: var(--muted); padding: 48px 0; font-size: 15px; }
 
     footer { margin-top: 48px; text-align: center; color: var(--muted); font-size: 12.5px; }
+    .admin-link { color: inherit; text-decoration: none; opacity: 0.7; }
+    .admin-link:hover { opacity: 1; text-decoration: underline; }
 
     /* ===== Back link (counter view) ===== */
     .back {
@@ -703,7 +705,7 @@
       </div>
       <div class="empty" id="empty" hidden>검색 결과가 없습니다.</div>
 
-      <footer>HAPPS · 오프라인에서도 동작하는 나만의 앱 모음</footer>
+      <footer>HAPPS · 오프라인에서도 동작하는 나만의 앱 모음 · <a class="admin-link" href="admin.html">관리자</a></footer>
     </section>
 
     <!-- ============ COUNTER APP VIEW ============ -->
