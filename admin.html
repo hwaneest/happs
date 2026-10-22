@@ -415,6 +415,7 @@
       gpa:       { name: '학점 변환기', icon: '🎓' },
       todo:      { name: '할 일 목록', icon: '✅' },
       dday:      { name: 'D-Day 계산기', icon: '📅' },
+      age:       { name: '만 나이 계산기', icon: '🎂' },
       checkhere: { name: 'Checkhere', icon: '🙋' },
       contact:   { name: 'Contact', icon: '✉️' },
     };
@@ -1018,7 +1019,7 @@
     /* ============ 샘플 데이터 (배포 전 미리보기용) ============ */
     function makeDemo() {
       const pages = Object.keys(APPS);
-      const weight = { store: 10, counter: 6, pomodoro: 4, gpa: 3, todo: 3.5, dday: 2.5, checkhere: 5, contact: 1 };
+      const weight = { store: 10, counter: 6, pomodoro: 4, gpa: 3, todo: 3.5, dday: 2.5, age: 2, checkhere: 5, contact: 1 };
       const today = kstToday();
       const start = addDays(today, -119);
       let seed = 7;
