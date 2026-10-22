@@ -253,8 +253,9 @@
     .grid { display: grid; gap: 12px; margin-top: 20px; }
     .grid.primary { grid-template-columns: repeat(2, 1fr); }
     .grid.secondary { grid-template-columns: repeat(5, 1fr); }
+    .grid.secondary.four { grid-template-columns: repeat(4, 1fr); }
     @media (max-width: 640px) {
-      .grid.secondary { grid-template-columns: repeat(2, 1fr); }
+      .grid.secondary, .grid.secondary.four { grid-template-columns: repeat(2, 1fr); }
     }
     .stat {
       background: var(--card);
@@ -606,6 +607,22 @@
           <div class="app-action">
             <span class="pill">열기</span>
             <span class="card-views" data-card-views="dday">조회수 <strong>–</strong></span>
+          </div>
+        </a>
+
+        <a class="app available" href="#age"
+           data-name="만 나이 계산기 나이 연 나이 세는 나이 생일 생년월일 띠 age">
+          <div class="app-top">
+            <div class="app-icon" style="background:#fdf0f7;">🎂</div>
+            <div>
+              <p class="app-name">만 나이 계산기</p>
+              <div class="app-cat">날짜 도구</div>
+            </div>
+          </div>
+          <p class="app-desc">생년월일로 만 나이·연 나이와 다음 생일까지 남은 날을 계산합니다.</p>
+          <div class="app-action">
+            <span class="pill">열기</span>
+            <span class="card-views" data-card-views="age">조회수 <strong>–</strong></span>
           </div>
         </a>
 
@@ -968,6 +985,57 @@
       <footer>날짜는 브라우저에 자동 저장됩니다 · 오늘 기준으로 계산합니다</footer>
     </section>
 
+    <!-- ============ 만 나이 계산기 APP VIEW ============ -->
+    <section id="view-age" hidden>
+      <button class="back" data-nav="#store">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        앱 목록
+      </button>
+
+      <header class="app-header">
+        <h1>만 나이 계산기</h1>
+        <p>생년월일을 넣으면 만 나이와 다음 생일까지 남은 날을 알려드립니다. 🎂</p>
+        <div class="views" data-views="age">조회수 <strong>–</strong></div>
+      </header>
+
+      <div class="editor-card">
+        <div class="field-row">
+          <div class="field">
+            <label for="ageBirth">생년월일</label>
+            <input id="ageBirth" type="date" max="9999-12-31" />
+          </div>
+          <div class="field">
+            <label for="ageBase">기준일</label>
+            <input id="ageBase" type="date" max="9999-12-31" />
+          </div>
+        </div>
+        <p class="hint" id="ageHint">생년월일을 입력하면 기준일(오늘) 기준으로 계산합니다.</p>
+      </div>
+
+      <div class="grid primary">
+        <div class="stat highlight">
+          <div class="num" id="ageMan">–</div>
+          <div class="label">만 나이</div>
+        </div>
+        <div class="stat highlight">
+          <div class="num" id="ageNext">–</div>
+          <div class="label" id="ageNextLabel">다음 생일까지</div>
+        </div>
+      </div>
+
+      <div class="grid secondary four">
+        <div class="stat"><div class="num" id="ageYear">–</div><div class="label">연 나이</div></div>
+        <div class="stat"><div class="num" id="ageKor">–</div><div class="label">세는 나이</div></div>
+        <div class="stat"><div class="num" id="ageDays">–</div><div class="label">살아온 날</div></div>
+        <div class="stat"><div class="num" id="ageZodiac">–</div><div class="label">띠 (양력 기준)</div></div>
+      </div>
+
+      <footer>2023년 6월부터 법·행정상 나이는 만 나이로 통일되었습니다 · 연 나이는 병역·청소년보호 등 일부 법에서 사용</footer>
+    </section>
+
     <!-- ============ CHECKHERE APP VIEW ============ -->
     <section id="view-checkhere" hidden>
       <button class="back" data-nav="#store">
@@ -1091,6 +1159,7 @@
       gpa: document.getElementById('view-gpa'),
       todo: document.getElementById('view-todo'),
       dday: document.getElementById('view-dday'),
+      age: document.getElementById('view-age'),
       checkhere: document.getElementById('view-checkhere'),
       contact: document.getElementById('view-contact'),
     };
@@ -1662,6 +1731,68 @@
       calcRender();
     });
     calcBase.value = todayISO();
+
+    /* ============ 만 나이 계산기 앱 ============ */
+    const ageBirth = document.getElementById('ageBirth');
+    const ageBase = document.getElementById('ageBase');
+    const ageHint = document.getElementById('ageHint');
+    const ageOut = {
+      man: document.getElementById('ageMan'),
+      next: document.getElementById('ageNext'),
+      nextLabel: document.getElementById('ageNextLabel'),
+      year: document.getElementById('ageYear'),
+      kor: document.getElementById('ageKor'),
+      days: document.getElementById('ageDays'),
+      zodiac: document.getElementById('ageZodiac'),
+    };
+    const ZODIAC = ['쥐', '소', '호랑이', '토끼', '용', '뱀', '말', '양', '원숭이', '닭', '개', '돼지'];
+
+    // 그해의 생일. 2월 29일생은 평년엔 3월 1일에 나이를 먹습니다.
+    function birthdayIn(year, birth) {
+      const d = new Date(year, birth.getMonth(), birth.getDate());
+      return d.getMonth() === birth.getMonth() ? d : new Date(year, 2, 1);
+    }
+
+    function ageRender() {
+      const blanks = () => {
+        ['man', 'next', 'year', 'kor', 'days', 'zodiac'].forEach((k) => (ageOut[k].textContent = '–'));
+        ageOut.nextLabel.textContent = '다음 생일까지';
+      };
+      if (!ageBirth.value || !ageBase.value) {
+        ageHint.textContent = '생년월일을 입력하면 기준일(오늘) 기준으로 계산합니다.';
+        blanks();
+        return;
+      }
+      const birth = new Date(ageBirth.value + 'T00:00:00');
+      const base = new Date(ageBase.value + 'T00:00:00');
+      if (isNaN(birth) || isNaN(base)) { blanks(); return; }
+      if (birth > base) {
+        ageHint.textContent = '생년월일이 기준일보다 늦어요. 날짜를 확인해 주세요.';
+        blanks();
+        return;
+      }
+
+      const by = birth.getFullYear();
+      const y = base.getFullYear();
+      const man = y - by - (base < birthdayIn(y, birth) ? 1 : 0);
+      let next = birthdayIn(y, birth);
+      if (next <= base) next = birthdayIn(y + 1, birth);
+      const toNext = Math.round((next - base) / 86400000);
+      const isBirthday = base.getTime() === birthdayIn(y, birth).getTime() && y > by;
+      const lived = Math.round((base - birth) / 86400000) + 1; // 태어난 날을 1일째로
+
+      ageOut.man.textContent = `${man}세`;
+      ageOut.next.textContent = isBirthday ? '🎉 오늘' : `D-${fmt(toNext)}`;
+      ageOut.nextLabel.textContent = isBirthday ? `${man}번째 생일이에요` : `다음 생일 (${fmtKDate(next)})`;
+      ageOut.year.textContent = `${y - by}세`;
+      ageOut.kor.textContent = `${y - by + 1}세`;
+      ageOut.days.textContent = `${fmt(lived)}일`;
+      ageOut.zodiac.textContent = ZODIAC[(((by - 4) % 12) + 12) % 12];
+      ageHint.textContent = `${ageBase.value.replace(/-/g, '.')} 기준 만 ${man}세입니다.`;
+    }
+    ageBirth.addEventListener('input', ageRender);
+    ageBase.addEventListener('input', ageRender);
+    ageBase.value = todayISO();
 
     /* ============ Checkhere 출석 체크 앱 ============ */
     // 출석은 이제 Google 시트에만 기록합니다.

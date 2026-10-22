@@ -24,7 +24,7 @@
 
 // ── 설정 ────────────────────────────────────────────────
 // 조회수를 셀 수 있는 페이지 (index.html 의 data-views 값과 같아야 합니다)
-var PAGES = ['store', 'counter', 'pomodoro', 'gpa', 'todo', 'dday', 'checkhere', 'contact'];
+var PAGES = ['store', 'counter', 'pomodoro', 'gpa', 'todo', 'dday', 'age', 'checkhere', 'contact'];
 var TZ = 'Asia/Seoul';
 var SHEET_NAME = 'events';
 var HEADERS = ['time', 'date', 'hour', 'page', 'visitor', 'new', 'device', 'browser', 'os', 'referrer', 'lang'];
