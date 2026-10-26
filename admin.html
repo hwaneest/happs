@@ -148,6 +148,11 @@
     .chart .hit:hover + .bar, .chart .bar.hover { opacity: 0.75; }
     .chart .xhair { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
     .empty-chart { color: var(--muted); font-size: 13px; padding: 34px 0; text-align: center; }
+    .section-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; flex-wrap: wrap; margin: 26px 0 12px; }
+    .section-head h2 { margin: 0; font-size: 16px; }
+    .section-head .desc { margin: 2px 0 0; font-size: 12.5px; color: var(--muted); }
+    .day-pick { display: inline-flex; gap: 6px; align-items: center; }
+    .day-pick .btn { padding: 8px 11px; }
 
     #tip {
       position: fixed; pointer-events: none; z-index: 50; background: var(--card); color: var(--text);
@@ -207,6 +212,7 @@
     .switch input:checked + span { background: var(--accent); }
     .switch input:checked + span::after { transform: translateX(18px); }
     .views-input { width: 110px; text-align: right; }
+    .export-btns { display: flex; gap: 6px; flex-shrink: 0; }
     .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background: var(--muted); }
     .status-dot.ok { background: var(--good); }
     .status-dot.fail { background: var(--bad); }
@@ -307,7 +313,18 @@
           </div>
         </div>
 
-        <div class="grid three mt">
+        <div class="section-head">
+          <div>
+            <h2>방문 환경</h2>
+            <p class="desc" id="breakDesc"></p>
+          </div>
+          <div class="day-pick">
+            <button class="btn" id="breakPrev" title="이전 날">◀</button>
+            <select id="breakDay"></select>
+            <button class="btn" id="breakNext" title="다음 날">▶</button>
+          </div>
+        </div>
+        <div class="grid three">
           <div class="card"><h2>기기</h2><p class="desc">조회수 기준</p><div class="hlist" id="devList"></div></div>
           <div class="card"><h2>신규 · 재방문</h2><p class="desc">방문자 기준</p><div class="hlist" id="nvList"></div></div>
           <div class="card"><h2>유입 경로</h2><p class="desc">처음 들어온 외부 사이트</p><div class="hlist" id="refList"></div></div>
@@ -322,10 +339,19 @@
         <div class="card">
           <div class="card-head">
             <div>
-              <h2>일자별 조회수 표</h2>
-              <p class="desc">칸이 진할수록 조회수가 많습니다 · 방문자는 같은 날 같은 사람을 한 번만 셉니다</p>
+              <h2 id="dailyTitle">일자별 조회수 표</h2>
+              <p class="desc" id="dailyDesc"></p>
             </div>
             <button class="btn" id="csvDaily">CSV 내려받기</button>
+          </div>
+          <div class="seg" id="dailyDimSeg" style="margin-bottom:12px; flex-wrap:wrap;">
+            <button data-dim="app" class="on">앱별</button>
+            <button data-dim="dev">기기</button>
+            <button data-dim="nv">신규 · 재방문</button>
+            <button data-dim="ref">유입 경로</button>
+            <button data-dim="br">브라우저</button>
+            <button data-dim="os">운영체제</button>
+            <button data-dim="lang">언어</button>
           </div>
           <div class="table-wrap scroll-y"><table id="dailyTable"></table></div>
         </div>
@@ -386,8 +412,12 @@
                 <button class="btn" id="healthBtn">연결 확인</button>
               </div>
               <div class="setting">
-                <div><div class="t">원본 데이터 내보내기</div><div class="d">집계 데이터 전체를 JSON으로 받습니다.</div></div>
-                <button class="btn" id="jsonBtn">JSON 내려받기</button>
+                <div><div class="t">전체 데이터 내보내기</div><div class="d">기록된 전체 기간 · 모든 앱의 통계를 받습니다. Excel은 표마다 시트로 나뉘고, CSV는 같은 표들을 한 파일에 차례로 담습니다.</div></div>
+                <div class="export-btns">
+                  <button class="btn primary" id="xlsxBtn">Excel</button>
+                  <button class="btn" id="csvAllBtn">CSV</button>
+                  <button class="btn" id="jsonBtn">JSON</button>
+                </div>
               </div>
             </div>
           </div>
@@ -427,6 +457,8 @@
       key: null, demo: false, data: null, index: null,
       tab: 'overview', range: '30', from: null, to: null, app: 'all',
       dailySort: { col: 'date', dir: -1 },
+      breakDay: null,   // 방문 환경 카드에서 고른 날짜 (null = 선택한 기간 전체)
+      dailyDim: 'app',  // 일자별 표의 열 기준
     };
 
     const $ = (id) => document.getElementById(id);
@@ -667,48 +699,151 @@
       $('wdDesc').textContent = '요일마다 하루 평균';
       barChart($('wdChart'), wdAvg.map((v, i) => ({ label: WEEKDAYS[i], tip: `${WEEKDAYS[i]}요일 · ${cur.wdDays[i]}일`, v, dec: 1 })), { height: 130 });
 
-      hlist($('devList'), cur.dims.dev, (k) => DEV_NAMES[k] || k);
-      const ret = visitors - cur.newV;
-      hlist($('nvList'), { '신규 방문자': Math.min(cur.newV, visitors), '재방문자': Math.max(0, ret) });
-      hlist($('refList'), cur.dims.ref, (k) => (k === '(direct)' ? '직접 방문 · 북마크' : k), 8);
-      hlist($('brList'), cur.dims.br);
-      hlist($('osList'), cur.dims.os);
-      hlist($('langList'), cur.dims.lang, null, 6);
+      renderBreakdown(pages, cur);
+    }
+
+    // 방문 환경 카드 (기기 · 신규/재방문 · 유입 경로 · 브라우저 · OS · 언어)
+    function renderBreakdown(pages, rangeAgg) {
+      const days = dateList(state.from, state.to);
+      if (state.breakDay && !days.includes(state.breakDay)) state.breakDay = null;
+      const day = state.breakDay;
+      const sel = $('breakDay');
+      sel.innerHTML = `<option value="">선택한 기간 전체</option>`
+        + [...days].reverse().map((d) => `<option value="${d}">${d} (${WEEKDAYS[weekday(d)]})</option>`).join('');
+      sel.value = day || '';
+      $('breakPrev').disabled = day ? day === days[0] : days.length < 1;
+      $('breakNext').disabled = !day;
+
+      const agg = day ? aggregate(pages, day, day) : rangeAgg;
+      const visitors = agg.visitors.size;
+      $('breakDesc').textContent = (day ? `${day} (${WEEKDAYS[weekday(day)]}) 하루` : rangeLabel())
+        + ` · 조회수 ${fmt(agg.views)} · 방문자 ${fmt(visitors)}`;
+
+      hlist($('devList'), agg.dims.dev, dimName.dev);
+      hlist($('nvList'), nvCounts(agg));
+      hlist($('refList'), agg.dims.ref, dimName.ref, 8);
+      hlist($('brList'), agg.dims.br);
+      hlist($('osList'), agg.dims.os);
+      hlist($('langList'), agg.dims.lang, null, 6);
+    }
+
+    const dimName = {
+      dev: (k) => DEV_NAMES[k] || k,
+      ref: (k) => (k === '(direct)' ? '직접 방문 · 북마크' : k),
+    };
+    function nvCounts(agg) {
+      const visitors = agg.visitors.size;
+      return { '신규 방문자': Math.min(agg.newV, visitors), '재방문자': Math.max(0, visitors - agg.newV) };
+    }
+
+    $('breakDay').addEventListener('change', (e) => { state.breakDay = e.target.value || null; renderOverview(); });
+    // ◀ : 전체 → 마지막 날, 하루 → 그 전날 / ▶ : 다음 날, 마지막 날 다음은 전체
+    $('breakPrev').addEventListener('click', () => {
+      state.breakDay = state.breakDay ? addDays(state.breakDay, -1) : state.to;
+      renderOverview();
+    });
+    $('breakNext').addEventListener('click', () => {
+      if (!state.breakDay) return;
+      state.breakDay = state.breakDay >= state.to ? null : addDays(state.breakDay, 1);
+      renderOverview();
+    });
+
+    const DIM_LABELS = { app: '앱별', dev: '기기', nv: '신규 · 재방문', ref: '유입 경로', br: '브라우저', os: '운영체제', lang: '언어' };
+
+    // 일자별 표의 데이터: 날짜마다 열(앱 또는 방문 환경 항목)별 숫자
+    function dailyMatrix(dim = state.dailyDim, from = state.from, to = state.to, dimPages = selectedPages()) {
+      const days = dateList(from, to);
+      if (dim === 'app') {
+        const pages = state.data.pages;
+        return {
+          unit: '조회수', cols: pages.map((p) => ({ label: `${appIcon(p)} ${appName(p).replace(/ \(.*\)/, '')}`, csv: appName(p), title: appName(p) })),
+          rows: days.map((d) => {
+            const r = state.index[d] || {};
+            const vs = new Set();
+            const cells = pages.map((p) => { const b = r[p]; if (b) b.vs.forEach((x) => vs.add(x)); return b ? b.v : 0; });
+            return { date: d, cells, total: cells.reduce((a, b) => a + b, 0), u: vs.size };
+          }),
+        };
+      }
+      const pages = dimPages;
+      const perDay = days.map((d) => ({ d, agg: aggregate(pages, d, d) }));
+      if (dim === 'nv') {
+        return {
+          unit: '방문자', cols: [{ label: '신규 방문자' }, { label: '재방문자' }],
+          rows: perDay.map(({ d, agg }) => {
+            const c = nvCounts(agg);
+            return { date: d, cells: [c['신규 방문자'], c['재방문자']], total: agg.visitors.size, u: agg.visitors.size };
+          }),
+        };
+      }
+      // 기간 전체에서 많은 순으로 열을 정하고, 8개가 넘으면 나머지는 '기타'로 묶습니다.
+      const sum = {};
+      perDay.forEach(({ agg }) => Object.entries(agg.dims[dim]).forEach(([k, n]) => { sum[k] = (sum[k] || 0) + n; }));
+      let keys = Object.keys(sum).sort((a, b) => sum[b] - sum[a]);
+      const other = keys.length > 8;
+      if (other) keys = keys.slice(0, 7);
+      const nameFn = dimName[dim] || ((k) => k);
+      const cols = keys.map((k) => ({ label: esc(nameFn(k)), csv: nameFn(k) }));
+      if (other) cols.push({ label: '기타', csv: '기타' });
+      return {
+        unit: '조회수', cols,
+        rows: perDay.map(({ d, agg }) => {
+          const o = agg.dims[dim];
+          const cells = keys.map((k) => o[k] || 0);
+          if (other) cells.push(agg.views - cells.reduce((a, b) => a + b, 0));
+          return { date: d, cells, total: agg.views, u: agg.visitors.size };
+        }),
+      };
     }
 
     function renderDaily() {
-      const pages = state.data.pages;
-      const days = dateList(state.from, state.to);
-      const rows = days.map((d) => {
-        const r = (state.index[d]) || {};
-        const vs = new Set();
-        const cells = pages.map((p) => { const b = r[p]; if (b) b.vs.forEach((x) => vs.add(x)); return b ? b.v : 0; });
-        return { date: d, cells, total: cells.reduce((a, b) => a + b, 0), u: vs.size };
-      });
+      const dim = state.dailyDim;
+      document.querySelectorAll('#dailyDimSeg button').forEach((b) => b.classList.toggle('on', b.dataset.dim === dim));
+      const appLabel = dim === 'app' || state.app === 'all' ? '전체 앱' : appName(state.app);
+      $('dailyTitle').textContent = dim === 'app' ? '일자별 조회수 표 — 앱별' : `일자별 ${DIM_LABELS[dim]} 표 — ${appLabel}`;
+      $('dailyDesc').textContent = (dim === 'nv'
+        ? '칸은 그날의 방문자 수입니다 · 신규는 이 사이트를 처음 연 날입니다 · 합계 줄은 날마다 센 방문자를 더한 값입니다'
+        : '칸이 진할수록 조회수가 많습니다 · 방문자는 같은 날 같은 사람을 한 번만 셉니다')
+        + (dim === 'app' ? '' : ' · 위의 앱 선택이 적용됩니다');
+
+      const m = dailyMatrix();
+      const rows = m.rows;
       const { col, dir } = state.dailySort;
+      if (typeof col === 'number' && col >= m.cols.length) state.dailySort = { col: 'date', dir: -1 };
       rows.sort((a, b) => {
-        const va = col === 'date' ? a.date : col === 'total' ? a.total : col === 'u' ? a.u : a.cells[col];
-        const vb = col === 'date' ? b.date : col === 'total' ? b.total : col === 'u' ? b.u : b.cells[col];
-        return (va < vb ? -1 : va > vb ? 1 : 0) * dir;
+        const c = state.dailySort.col;
+        const va = c === 'date' ? a.date : c === 'total' ? a.total : c === 'u' ? a.u : a.cells[c];
+        const vb = c === 'date' ? b.date : c === 'total' ? b.total : c === 'u' ? b.u : b.cells[c];
+        return (va < vb ? -1 : va > vb ? 1 : 0) * state.dailySort.dir;
       });
       const max = Math.max(1, ...rows.flatMap((r) => r.cells));
-      const arrow = (c) => (col === c ? (dir > 0 ? ' ▲' : ' ▼') : '');
+      const arrow = (c) => (state.dailySort.col === c ? (state.dailySort.dir > 0 ? ' ▲' : ' ▼') : '');
       const shade = (v) => (v ? `background:color-mix(in srgb, var(--seq-1) ${Math.round(8 + (v / max) * 52)}%, var(--seq-0));${v / max > 0.55 ? 'color:#fff;' : ''}` : '');
-      const totals = pages.map((_, i) => rows.reduce((s, r) => s + r.cells[i], 0));
+      const totals = m.cols.map((_, i) => rows.reduce((s, r) => s + r.cells[i], 0));
+      const pages = dim === 'app' ? state.data.pages : selectedPages();
       const agg = aggregate(pages, state.from, state.to);
+      const showU = dim !== 'nv';
 
       $('dailyTable').innerHTML = `<thead><tr>
           <th class="sortable" data-col="date">날짜${arrow('date')}</th>
-          ${pages.map((p, i) => `<th class="sortable" data-col="${i}" title="${esc(appName(p))}">${appIcon(p)} ${esc(appName(p).replace(/ \(.*\)/, ''))}${arrow(i)}</th>`).join('')}
-          <th class="sortable" data-col="total">합계${arrow('total')}</th>
-          <th class="sortable" data-col="u">방문자${arrow('u')}</th>
+          ${m.cols.map((c, i) => `<th class="sortable" data-col="${i}" title="${esc(c.title || c.csv)}">${c.label}${arrow(i)}</th>`).join('')}
+          <th class="sortable" data-col="total">${dim === 'nv' ? '방문자' : '합계'}${arrow('total')}</th>
+          ${showU ? `<th class="sortable" data-col="u">방문자${arrow('u')}</th>` : ''}
         </tr></thead><tbody>`
         + rows.map((r) => `<tr>
             <td class="${weekday(r.date) % 6 === 0 ? 'weekend' : ''}">${r.date} (${WEEKDAYS[weekday(r.date)]})</td>
             ${r.cells.map((v) => `<td style="${shade(v)}">${v ? fmt(v) : '<span class="muted">·</span>'}</td>`).join('')}
-            <td><b>${fmt(r.total)}</b></td><td>${fmt(r.u)}</td></tr>`).join('')
-        + `<tr class="total"><td>합계</td>${totals.map((t) => `<td>${fmt(t)}</td>`).join('')}<td>${fmt(agg.views)}</td><td>${fmt(agg.visitors.size)}</td></tr></tbody>`;
+            <td><b>${fmt(r.total)}</b></td>${showU ? `<td>${fmt(r.u)}</td>` : ''}</tr>`).join('')
+        + `<tr class="total"><td>합계</td>${totals.map((t) => `<td>${fmt(t)}</td>`).join('')}`
+        + `<td>${fmt(dim === 'nv' ? rows.reduce((s, r) => s + r.total, 0) : agg.views)}</td>${showU ? `<td>${fmt(agg.visitors.size)}</td>` : ''}</tr></tbody>`;
     }
+    $('dailyDimSeg').addEventListener('click', (e) => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      state.dailyDim = b.dataset.dim;
+      state.dailySort = { col: 'date', dir: -1 };
+      renderDaily();
+    });
     $('dailyTable').addEventListener('click', (e) => {
       const th = e.target.closest('th.sortable');
       if (!th) return;
@@ -841,21 +976,122 @@
     function toCsv(rows) { return '﻿' + rows.map((r) => r.map(csvCell).join(',')).join('\n'); }
 
     $('csvDaily').addEventListener('click', () => {
-      const pages = state.data.pages;
-      const rows = [['날짜', ...pages.map(appName), '합계', '방문자']];
-      dateList(state.from, state.to).forEach((d) => {
-        const r = state.index[d] || {};
-        const vs = new Set();
-        const cells = pages.map((p) => { const b = r[p]; if (b) b.vs.forEach((x) => vs.add(x)); return b ? b.v : 0; });
-        rows.push([d, ...cells, cells.reduce((a, b) => a + b, 0), vs.size]);
-      });
-      download(`happs-daily-${state.from}_${state.to}.csv`, toCsv(rows), 'text/csv;charset=utf-8');
+      const m = dailyMatrix();
+      const nv = state.dailyDim === 'nv';
+      const rows = [['날짜', ...m.cols.map((c) => c.csv || c.label), nv ? '방문자' : '합계', ...(nv ? [] : ['방문자'])]];
+      m.rows.forEach((r) => rows.push([r.date, ...r.cells, r.total, ...(nv ? [] : [r.u])]));
+      const suffix = state.dailyDim === 'app' ? '' : `-${state.dailyDim}${state.app === 'all' ? '' : '-' + state.app}`;
+      download(`happs-daily${suffix}-${state.from}_${state.to}.csv`, toCsv(rows), 'text/csv;charset=utf-8');
     });
     $('csvRecent').addEventListener('click', () => {
       const rows = [['시각', '앱', '방문자', '신규', '기기', '브라우저', 'OS', '유입 경로', '언어']];
       (state.data.recent || []).forEach((r) => rows.push([fmtTime(r.t), appName(r.p), r.vid, r.n ? 'Y' : '', r.dev, r.br, r.os, r.ref, r.lang]));
       download(`happs-recent-${state.data.today}.csv`, toCsv(rows), 'text/csv;charset=utf-8');
     });
+    // 관리 탭 '전체 데이터 내보내기': 기록된 전체 기간 · 모든 앱 기준 표 묶음
+    function exportTables() {
+      const d = state.data;
+      const pages = d.pages;
+      const from = d.firstDate || d.today;
+      const to = d.today;
+      const all = aggregate(pages, from, to);
+      const tables = [];
+
+      tables.push({ name: '요약', rows: [
+        ['항목', '값'],
+        ['기록 기간', `${from} ~ ${to}`],
+        ['기록된 방문(조회수)', all.views],
+        ['방문자', all.visitors.size],
+        ['신규 방문자', all.newV],
+        ['누적 조회수 합계', pages.reduce((a, p) => a + (d.cumulative[p] || 0), 0)],
+        ['내보낸 시각', fmtTime(Date.now())],
+        ['참고', '누적 조회수에는 기록 시작 전 방문도 들어 있습니다'],
+      ] });
+
+      tables.push({ name: '앱별 합계', rows: [['앱', '누적 조회수', '기록된 조회수', '방문자', '신규 방문자']]
+        .concat(pages.map((p) => {
+          const a = aggregate([p], from, to);
+          return [appName(p), d.cumulative[p] || 0, a.views, a.visitors.size, a.newV];
+        })) });
+
+      Object.keys(DIM_LABELS).forEach((dim) => {
+        const m = dailyMatrix(dim, from, to, pages);
+        const nv = dim === 'nv';
+        const rows = [['날짜', ...m.cols.map((c) => c.csv || c.label), nv ? '방문자' : '합계', ...(nv ? [] : ['방문자'])]];
+        m.rows.forEach((r) => rows.push([r.date, ...r.cells, r.total, ...(nv ? [] : [r.u])]));
+        tables.push({ name: `일자별 ${DIM_LABELS[dim].replace(/ · /g, '·')}`, rows });
+      });
+
+      const hourRows = [['앱', ...Array.from({ length: 24 }, (_, h) => `${h}시`), '합계']];
+      pages.forEach((p) => {
+        const a = aggregate([p], from, to);
+        hourRows.push([appName(p), ...a.hours, a.views]);
+      });
+      hourRows.push(['전체', ...all.hours, all.views]);
+      tables.push({ name: '시간대별', rows: hourRows });
+
+      tables.push({ name: '최근 방문', rows: [['시각', '앱', '방문자', '신규', '기기', '브라우저', 'OS', '유입 경로', '언어']]
+        .concat((d.recent || []).map((r) => [fmtTime(r.t), appName(r.p), r.vid, r.n ? 'Y' : '', dimName.dev(r.dev || '') || '', r.br, r.os, r.ref || '직접', r.lang])) });
+
+      // 날짜 × 앱 × 항목마다 한 줄 — 피벗 테이블로 원하는 대로 다시 묶을 수 있습니다
+      const long = [['날짜', '앱', '구분', '항목', '값']];
+      [...d.buckets].sort((a, b) => (a.d < b.d ? -1 : a.d > b.d ? 1 : pages.indexOf(a.p) - pages.indexOf(b.p))).forEach((b) => {
+        const app = appName(b.p);
+        long.push([b.d, app, '조회수', '', b.v], [b.d, app, '방문자', '', b.vs.length], [b.d, app, '신규 방문자', '', b.n]);
+        Object.entries(b.h).sort((x, y) => x[0] - y[0]).forEach(([h, n]) => long.push([b.d, app, '시간대', `${h}시`, n]));
+        ['dev', 'ref', 'br', 'os', 'lang'].forEach((k) => {
+          const nameFn = dimName[k] || ((x) => x);
+          Object.entries(b[k] || {}).sort((x, y) => y[1] - x[1]).forEach(([name, n]) => long.push([b.d, app, DIM_LABELS[k], nameFn(name), n]));
+        });
+      });
+      tables.push({ name: '원본 (긴 형식)', rows: long });
+      return tables;
+    }
+
+    $('csvAllBtn').addEventListener('click', () => {
+      const out = [];
+      exportTables().forEach((t, i) => {
+        if (i) out.push([]);
+        out.push([`[${t.name}]`], ...t.rows);
+      });
+      download(`happs-all-${state.data.today}.csv`, toCsv(out), 'text/csv;charset=utf-8');
+    });
+
+    // Excel 파일은 SheetJS로 만듭니다. 처음 누를 때만 불러옵니다.
+    let xlsxLib = null;
+    function loadXlsx() {
+      if (window.XLSX) return Promise.resolve(window.XLSX);
+      if (xlsxLib) return xlsxLib;
+      xlsxLib = new Promise((resolve, reject) => {
+        const sc = document.createElement('script');
+        sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        sc.onload = () => resolve(window.XLSX);
+        sc.onerror = () => { xlsxLib = null; reject(new Error('Excel 라이브러리를 불러오지 못했습니다')); };
+        document.head.appendChild(sc);
+      });
+      return xlsxLib;
+    }
+    $('xlsxBtn').addEventListener('click', async () => {
+      const btn = $('xlsxBtn');
+      btn.disabled = true;
+      try {
+        const XLSX = await loadXlsx();
+        const wb = XLSX.utils.book_new();
+        exportTables().forEach((t) => {
+          const ws = XLSX.utils.aoa_to_sheet(t.rows);
+          const widths = t.rows[0].map((_, c) => Math.min(40, Math.max(6, ...t.rows.slice(0, 200).map((r) => String(r[c] == null ? '' : r[c]).length * 1.6 + 2))));
+          ws['!cols'] = widths.map((wch) => ({ wch }));
+          if (t.rows.length > 1) ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: t.rows.length - 1, c: t.rows[0].length - 1 } }) };
+          XLSX.utils.book_append_sheet(wb, ws, t.name.replace(/[\\/?*[\]:]/g, ' ').slice(0, 31));
+        });
+        XLSX.writeFile(wb, `happs-all-${state.data.today}.xlsx`);
+      } catch (err) {
+        toast('Excel 만들기 실패: ' + err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
     $('jsonBtn').addEventListener('click', () => {
       download(`happs-stats-${state.data.today}.json`, JSON.stringify(state.data), 'application/json');
     });
