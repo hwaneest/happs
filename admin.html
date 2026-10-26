@@ -212,6 +212,7 @@
     .switch input:checked + span { background: var(--accent); }
     .switch input:checked + span::after { transform: translateX(18px); }
     .views-input { width: 110px; text-align: right; }
+    .export-btns { display: flex; gap: 6px; flex-shrink: 0; }
     .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background: var(--muted); }
     .status-dot.ok { background: var(--good); }
     .status-dot.fail { background: var(--bad); }
@@ -411,8 +412,12 @@
                 <button class="btn" id="healthBtn">연결 확인</button>
               </div>
               <div class="setting">
-                <div><div class="t">원본 데이터 내보내기</div><div class="d">집계 데이터 전체를 JSON으로 받습니다.</div></div>
-                <button class="btn" id="jsonBtn">JSON 내려받기</button>
+                <div><div class="t">전체 데이터 내보내기</div><div class="d">기록된 전체 기간 · 모든 앱의 통계를 받습니다. Excel은 표마다 시트로 나뉘고, CSV는 같은 표들을 한 파일에 차례로 담습니다.</div></div>
+                <div class="export-btns">
+                  <button class="btn primary" id="xlsxBtn">Excel</button>
+                  <button class="btn" id="csvAllBtn">CSV</button>
+                  <button class="btn" id="jsonBtn">JSON</button>
+                </div>
               </div>
             </div>
           </div>
@@ -746,9 +751,8 @@
     const DIM_LABELS = { app: '앱별', dev: '기기', nv: '신규 · 재방문', ref: '유입 경로', br: '브라우저', os: '운영체제', lang: '언어' };
 
     // 일자별 표의 데이터: 날짜마다 열(앱 또는 방문 환경 항목)별 숫자
-    function dailyMatrix() {
-      const dim = state.dailyDim;
-      const days = dateList(state.from, state.to);
+    function dailyMatrix(dim = state.dailyDim, from = state.from, to = state.to, dimPages = selectedPages()) {
+      const days = dateList(from, to);
       if (dim === 'app') {
         const pages = state.data.pages;
         return {
@@ -761,7 +765,7 @@
           }),
         };
       }
-      const pages = selectedPages();
+      const pages = dimPages;
       const perDay = days.map((d) => ({ d, agg: aggregate(pages, d, d) }));
       if (dim === 'nv') {
         return {
@@ -984,6 +988,110 @@
       (state.data.recent || []).forEach((r) => rows.push([fmtTime(r.t), appName(r.p), r.vid, r.n ? 'Y' : '', r.dev, r.br, r.os, r.ref, r.lang]));
       download(`happs-recent-${state.data.today}.csv`, toCsv(rows), 'text/csv;charset=utf-8');
     });
+    // 관리 탭 '전체 데이터 내보내기': 기록된 전체 기간 · 모든 앱 기준 표 묶음
+    function exportTables() {
+      const d = state.data;
+      const pages = d.pages;
+      const from = d.firstDate || d.today;
+      const to = d.today;
+      const all = aggregate(pages, from, to);
+      const tables = [];
+
+      tables.push({ name: '요약', rows: [
+        ['항목', '값'],
+        ['기록 기간', `${from} ~ ${to}`],
+        ['기록된 방문(조회수)', all.views],
+        ['방문자', all.visitors.size],
+        ['신규 방문자', all.newV],
+        ['누적 조회수 합계', pages.reduce((a, p) => a + (d.cumulative[p] || 0), 0)],
+        ['내보낸 시각', fmtTime(Date.now())],
+        ['참고', '누적 조회수에는 기록 시작 전 방문도 들어 있습니다'],
+      ] });
+
+      tables.push({ name: '앱별 합계', rows: [['앱', '누적 조회수', '기록된 조회수', '방문자', '신규 방문자']]
+        .concat(pages.map((p) => {
+          const a = aggregate([p], from, to);
+          return [appName(p), d.cumulative[p] || 0, a.views, a.visitors.size, a.newV];
+        })) });
+
+      Object.keys(DIM_LABELS).forEach((dim) => {
+        const m = dailyMatrix(dim, from, to, pages);
+        const nv = dim === 'nv';
+        const rows = [['날짜', ...m.cols.map((c) => c.csv || c.label), nv ? '방문자' : '합계', ...(nv ? [] : ['방문자'])]];
+        m.rows.forEach((r) => rows.push([r.date, ...r.cells, r.total, ...(nv ? [] : [r.u])]));
+        tables.push({ name: `일자별 ${DIM_LABELS[dim].replace(/ · /g, '·')}`, rows });
+      });
+
+      const hourRows = [['앱', ...Array.from({ length: 24 }, (_, h) => `${h}시`), '합계']];
+      pages.forEach((p) => {
+        const a = aggregate([p], from, to);
+        hourRows.push([appName(p), ...a.hours, a.views]);
+      });
+      hourRows.push(['전체', ...all.hours, all.views]);
+      tables.push({ name: '시간대별', rows: hourRows });
+
+      tables.push({ name: '최근 방문', rows: [['시각', '앱', '방문자', '신규', '기기', '브라우저', 'OS', '유입 경로', '언어']]
+        .concat((d.recent || []).map((r) => [fmtTime(r.t), appName(r.p), r.vid, r.n ? 'Y' : '', dimName.dev(r.dev || '') || '', r.br, r.os, r.ref || '직접', r.lang])) });
+
+      // 날짜 × 앱 × 항목마다 한 줄 — 피벗 테이블로 원하는 대로 다시 묶을 수 있습니다
+      const long = [['날짜', '앱', '구분', '항목', '값']];
+      [...d.buckets].sort((a, b) => (a.d < b.d ? -1 : a.d > b.d ? 1 : pages.indexOf(a.p) - pages.indexOf(b.p))).forEach((b) => {
+        const app = appName(b.p);
+        long.push([b.d, app, '조회수', '', b.v], [b.d, app, '방문자', '', b.vs.length], [b.d, app, '신규 방문자', '', b.n]);
+        Object.entries(b.h).sort((x, y) => x[0] - y[0]).forEach(([h, n]) => long.push([b.d, app, '시간대', `${h}시`, n]));
+        ['dev', 'ref', 'br', 'os', 'lang'].forEach((k) => {
+          const nameFn = dimName[k] || ((x) => x);
+          Object.entries(b[k] || {}).sort((x, y) => y[1] - x[1]).forEach(([name, n]) => long.push([b.d, app, DIM_LABELS[k], nameFn(name), n]));
+        });
+      });
+      tables.push({ name: '원본 (긴 형식)', rows: long });
+      return tables;
+    }
+
+    $('csvAllBtn').addEventListener('click', () => {
+      const out = [];
+      exportTables().forEach((t, i) => {
+        if (i) out.push([]);
+        out.push([`[${t.name}]`], ...t.rows);
+      });
+      download(`happs-all-${state.data.today}.csv`, toCsv(out), 'text/csv;charset=utf-8');
+    });
+
+    // Excel 파일은 SheetJS로 만듭니다. 처음 누를 때만 불러옵니다.
+    let xlsxLib = null;
+    function loadXlsx() {
+      if (window.XLSX) return Promise.resolve(window.XLSX);
+      if (xlsxLib) return xlsxLib;
+      xlsxLib = new Promise((resolve, reject) => {
+        const sc = document.createElement('script');
+        sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        sc.onload = () => resolve(window.XLSX);
+        sc.onerror = () => { xlsxLib = null; reject(new Error('Excel 라이브러리를 불러오지 못했습니다')); };
+        document.head.appendChild(sc);
+      });
+      return xlsxLib;
+    }
+    $('xlsxBtn').addEventListener('click', async () => {
+      const btn = $('xlsxBtn');
+      btn.disabled = true;
+      try {
+        const XLSX = await loadXlsx();
+        const wb = XLSX.utils.book_new();
+        exportTables().forEach((t) => {
+          const ws = XLSX.utils.aoa_to_sheet(t.rows);
+          const widths = t.rows[0].map((_, c) => Math.min(40, Math.max(6, ...t.rows.slice(0, 200).map((r) => String(r[c] == null ? '' : r[c]).length * 1.6 + 2))));
+          ws['!cols'] = widths.map((wch) => ({ wch }));
+          if (t.rows.length > 1) ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: t.rows.length - 1, c: t.rows[0].length - 1 } }) };
+          XLSX.utils.book_append_sheet(wb, ws, t.name.replace(/[\\/?*[\]:]/g, ' ').slice(0, 31));
+        });
+        XLSX.writeFile(wb, `happs-all-${state.data.today}.xlsx`);
+      } catch (err) {
+        toast('Excel 만들기 실패: ' + err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
     $('jsonBtn').addEventListener('click', () => {
       download(`happs-stats-${state.data.today}.json`, JSON.stringify(state.data), 'application/json');
     });
