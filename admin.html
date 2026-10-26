@@ -217,6 +217,21 @@
     .status-dot.ok { background: var(--good); }
     .status-dot.fail { background: var(--bad); }
 
+    /* 다운로드 확인 창 */
+    .confirm-overlay {
+      position: fixed; inset: 0; z-index: 70; background: rgba(15, 18, 28, 0.45);
+      display: flex; align-items: center; justify-content: center; padding: 16px;
+    }
+    .confirm-box {
+      width: 100%; max-width: 380px; background: var(--card); color: var(--text);
+      border: 1px solid var(--border); border-radius: 18px; padding: 24px 22px 18px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    }
+    .confirm-box h3 { margin: 0 0 6px; font-size: 18px; }
+    .confirm-box p { margin: 0; color: var(--muted); font-size: 13.5px; word-break: break-all; }
+    .confirm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+    .confirm-actions .btn { min-width: 76px; }
+
     .toast {
       position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(20px);
       background: var(--text); color: var(--bg); padding: 10px 18px; border-radius: 10px; font-size: 14px;
@@ -430,6 +445,17 @@
 
   <div id="tip" hidden></div>
   <div class="toast" id="toast"></div>
+
+  <div class="confirm-overlay" id="confirmDlg" hidden>
+    <div class="confirm-box" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmDesc">
+      <h3 id="confirmTitle">다운로드하시겠습니까?</h3>
+      <p id="confirmDesc"></p>
+      <div class="confirm-actions">
+        <button class="btn" id="confirmCancel" type="button">취소</button>
+        <button class="btn primary" id="confirmOk" type="button">확인</button>
+      </div>
+    </div>
+  </div>
 
   <script>
     /* ============ 설정 ============ */
@@ -972,21 +998,59 @@
       a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     }
+    // "다운로드하시겠습니까?" 확인 창. 확인 → true, 취소 · Esc · 바깥 클릭 → false
+    function confirmDownload(fileName) {
+      const dlg = $('confirmDlg');
+      $('confirmDesc').textContent = fileName;
+      dlg.hidden = false;
+      const prevFocus = document.activeElement;
+      $('confirmOk').focus();
+      return new Promise((resolve) => {
+        const done = (ok) => {
+          dlg.hidden = true;
+          $('confirmOk').removeEventListener('click', onOk);
+          $('confirmCancel').removeEventListener('click', onCancel);
+          dlg.removeEventListener('click', onBackdrop);
+          document.removeEventListener('keydown', onKey);
+          if (prevFocus && prevFocus.focus) prevFocus.focus();
+          resolve(ok);
+        };
+        const onOk = () => done(true);
+        const onCancel = () => done(false);
+        const onBackdrop = (e) => { if (e.target === dlg) done(false); };
+        const onKey = (e) => {
+          if (e.key === 'Escape') { e.preventDefault(); done(false); }
+          if (e.key === 'Tab') {  // 창 안에서만 포커스 이동
+            e.preventDefault();
+            (document.activeElement === $('confirmOk') ? $('confirmCancel') : $('confirmOk')).focus();
+          }
+        };
+        $('confirmOk').addEventListener('click', onOk);
+        $('confirmCancel').addEventListener('click', onCancel);
+        dlg.addEventListener('click', onBackdrop);
+        document.addEventListener('keydown', onKey);
+      });
+    }
+
     const csvCell = (v) => { const s = String(v == null ? '' : v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
     function toCsv(rows) { return '﻿' + rows.map((r) => r.map(csvCell).join(',')).join('\n'); }
 
-    $('csvDaily').addEventListener('click', () => {
+    $('csvDaily').addEventListener('click', async () => {
+      const suffix = state.dailyDim === 'app' ? '' : `-${state.dailyDim}${state.app === 'all' ? '' : '-' + state.app}`;
+      const name = `happs-daily${suffix}-${state.from}_${state.to}.csv`;
+      if (!(await confirmDownload(name))) return;
       const m = dailyMatrix();
       const nv = state.dailyDim === 'nv';
       const rows = [['날짜', ...m.cols.map((c) => c.csv || c.label), nv ? '방문자' : '합계', ...(nv ? [] : ['방문자'])]];
       m.rows.forEach((r) => rows.push([r.date, ...r.cells, r.total, ...(nv ? [] : [r.u])]));
-      const suffix = state.dailyDim === 'app' ? '' : `-${state.dailyDim}${state.app === 'all' ? '' : '-' + state.app}`;
-      download(`happs-daily${suffix}-${state.from}_${state.to}.csv`, toCsv(rows), 'text/csv;charset=utf-8');
+      download(name, toCsv(rows), 'text/csv;charset=utf-8');
     });
-    $('csvRecent').addEventListener('click', () => {
+    $('csvRecent').addEventListener('click', async () => {
+      const name = `happs-recent-${state.data.today}.csv`;
+      if (!(await confirmDownload(name))) return;
       const rows = [['시각', '앱', '방문자', '신규', '기기', '브라우저', 'OS', '유입 경로', '언어']];
       (state.data.recent || []).forEach((r) => rows.push([fmtTime(r.t), appName(r.p), r.vid, r.n ? 'Y' : '', r.dev, r.br, r.os, r.ref, r.lang]));
-      download(`happs-recent-${state.data.today}.csv`, toCsv(rows), 'text/csv;charset=utf-8');
+      download(name, toCsv(rows), 'text/csv;charset=utf-8');
     });
     // 관리 탭 '전체 데이터 내보내기': 기록된 전체 기간 · 모든 앱 기준 표 묶음
     function exportTables() {
@@ -1048,13 +1112,15 @@
       return tables;
     }
 
-    $('csvAllBtn').addEventListener('click', () => {
+    $('csvAllBtn').addEventListener('click', async () => {
+      const name = `happs-all-${state.data.today}.csv`;
+      if (!(await confirmDownload(name))) return;
       const out = [];
       exportTables().forEach((t, i) => {
         if (i) out.push([]);
         out.push([`[${t.name}]`], ...t.rows);
       });
-      download(`happs-all-${state.data.today}.csv`, toCsv(out), 'text/csv;charset=utf-8');
+      download(name, toCsv(out), 'text/csv;charset=utf-8');
     });
 
     // Excel 파일은 SheetJS로 만듭니다. 처음 누를 때만 불러옵니다.
@@ -1072,6 +1138,8 @@
       return xlsxLib;
     }
     $('xlsxBtn').addEventListener('click', async () => {
+      const name = `happs-all-${state.data.today}.xlsx`;
+      if (!(await confirmDownload(name))) return;
       const btn = $('xlsxBtn');
       btn.disabled = true;
       try {
@@ -1084,7 +1152,7 @@
           if (t.rows.length > 1) ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: t.rows.length - 1, c: t.rows[0].length - 1 } }) };
           XLSX.utils.book_append_sheet(wb, ws, t.name.replace(/[\\/?*[\]:]/g, ' ').slice(0, 31));
         });
-        XLSX.writeFile(wb, `happs-all-${state.data.today}.xlsx`);
+        XLSX.writeFile(wb, name);
       } catch (err) {
         toast('Excel 만들기 실패: ' + err.message);
       } finally {
@@ -1092,8 +1160,10 @@
       }
     });
 
-    $('jsonBtn').addEventListener('click', () => {
-      download(`happs-stats-${state.data.today}.json`, JSON.stringify(state.data), 'application/json');
+    $('jsonBtn').addEventListener('click', async () => {
+      const name = `happs-stats-${state.data.today}.json`;
+      if (!(await confirmDownload(name))) return;
+      download(name, JSON.stringify(state.data), 'application/json');
     });
 
     /* ============ 차트 (SVG) ============ */
