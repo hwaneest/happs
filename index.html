@@ -425,6 +425,31 @@
     .ta-title h2 { font-size: 18px; margin: 0; letter-spacing: -0.01em; }
     .ta-title span { font-size: 12.5px; color: var(--muted); }
     @media (hover: none) { .kbd-hint { display: none; } }
+    .ta-title:has(.ta-seg) { align-items: center; flex-wrap: wrap; }
+    .ta-seg { flex-shrink: 0; white-space: nowrap; display: inline-flex; gap: 4px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 4px; }
+    .ta-seg button {
+      border: none; background: none; font-family: inherit; font-size: 15px; font-weight: 700;
+      color: var(--muted); padding: 6px 14px; border-radius: 8px; cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .ta-seg button[aria-selected="true"] { background: var(--accent); color: #fff; }
+    .ta-seg button .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #22a06b; margin-left: 6px; vertical-align: middle; }
+    .sw .ring-fg { transition: none; }
+    .sw .ring-time .time small { font-size: 0.55em; font-weight: 700; color: var(--muted); }
+    .lap-list {
+      list-style: none; margin: 18px 0 0; padding: 0; text-align: left;
+      max-height: 232px; overflow-y: auto; border-top: 1px solid var(--border);
+    }
+    .lap-list li {
+      display: grid; grid-template-columns: 1fr auto auto; gap: 14px; align-items: baseline;
+      padding: 9px 4px; border-bottom: 1px solid var(--border); font-size: 14px; font-variant-numeric: tabular-nums;
+    }
+    .lap-list .lap-n { color: var(--muted); font-weight: 600; }
+    .lap-list .lap-t { font-weight: 700; }
+    .lap-list .lap-total { color: var(--muted); min-width: 76px; text-align: right; }
+    .lap-list li.best .lap-t { color: #22a06b; }
+    .lap-list li.worst .lap-t { color: #e5484d; }
+    .lap-list li.current .lap-t { color: var(--accent); }
     .tmr { text-align: center; --pomo-accent: var(--accent); }
     .tmr.done { --pomo-accent: #e5484d; }
     .tmr .ring-wrap { width: 220px; height: 220px; }
@@ -676,7 +701,7 @@
         </a>
 
         <a class="app available" href="#timer"
-           data-name="타이머 알람 timer alarm 스톱워치 카운트다운 시계 기상 시간 생산성">
+           data-name="타이머 알람 스톱워치 timer alarm stopwatch 랩 카운트다운 시계 기상 시간 생산성">
           <div class="app-top">
             <div class="app-icon" style="background:#fff4e0;">⏰</div>
             <div>
@@ -684,7 +709,7 @@
               <div class="app-cat">생산성</div>
             </div>
           </div>
-          <p class="app-desc">원하는 시간만큼 타이머를 맞추고, 정해진 시각에 울리는 알람도 설정합니다.</p>
+          <p class="app-desc">타이머·스톱워치로 시간을 재고, 정해진 시각에 울리는 알람도 설정합니다.</p>
           <div class="app-action">
             <span class="pill">열기</span>
             <span class="card-views" data-card-views="timer">조회수 <strong>–</strong></span>
@@ -1155,14 +1180,20 @@
 
       <header class="app-header">
         <h1>타이머 &amp; 알람</h1>
-        <p>시간을 재는 타이머와 정해진 시각에 울리는 알람을 한 화면에서 쓰세요. ⏰</p>
+        <p>타이머·스톱워치로 시간을 재고, 정해진 시각에 울리는 알람까지 한 화면에서 쓰세요. ⏰</p>
         <div class="views" data-views="timer">조회수 <strong>–</strong></div>
       </header>
 
       <div class="ta-layout">
-        <!-- 타이머 -->
+        <!-- 타이머 / 스톱워치 -->
         <div class="editor-card ta-card">
-          <div class="ta-title"><h2>타이머</h2><span class="kbd-hint">스페이스바: 시작/일시정지</span></div>
+          <div class="ta-title">
+            <div class="ta-seg" role="tablist" aria-label="타이머 또는 스톱워치">
+              <button role="tab" data-tmode="timer" aria-selected="true">타이머</button>
+              <button role="tab" data-tmode="sw" aria-selected="false">스톱워치</button>
+            </div>
+            <span class="kbd-hint" id="taKbdHint">스페이스바: 시작/일시정지</span>
+          </div>
           <div class="tmr" id="tmr">
             <div class="ring-wrap">
               <svg width="220" height="220" viewBox="0 0 260 260">
@@ -1195,6 +1226,26 @@
               <button class="btn-primary" id="tmrToggle">시작</button>
               <button class="btn-ghost" id="tmrReset">리셋</button>
             </div>
+          </div>
+
+          <div class="tmr sw" id="sw" hidden>
+            <div class="ring-wrap">
+              <svg width="220" height="220" viewBox="0 0 260 260">
+                <circle class="ring-bg" cx="130" cy="130" r="116" fill="none" stroke-width="12"></circle>
+                <circle class="ring-fg" id="swRing" cx="130" cy="130" r="116" fill="none" stroke-width="12" stroke-linecap="round"></circle>
+              </svg>
+              <div class="ring-time">
+                <div class="time" id="swTime">00:00<small>.00</small></div>
+                <div class="mode-label" id="swLabel">대기 중</div>
+              </div>
+            </div>
+
+            <div class="pomo-controls">
+              <button class="btn-primary" id="swToggle">시작</button>
+              <button class="btn-ghost" id="swSide" disabled>랩</button>
+            </div>
+
+            <ol class="lap-list" id="swLaps" aria-label="랩 기록"></ol>
           </div>
         </div>
 
@@ -1238,7 +1289,7 @@
         </div>
       </div>
 
-      <footer>알람과 타이머는 이 페이지가 열려 있을 때만 울립니다 · 소리가 나도록 기기 음량을 확인하세요 · 알람은 브라우저에 자동 저장됩니다</footer>
+      <footer>알람과 타이머는 이 페이지가 열려 있을 때만 울립니다 · 스톱워치는 다른 앱 화면으로 옮겨도 계속 잽니다 · 소리가 나도록 기기 음량을 확인하세요 · 알람은 브라우저에 자동 저장됩니다</footer>
     </section>
 
     <!-- ============ CHECKHERE APP VIEW ============ -->
@@ -2182,6 +2233,7 @@
       if (tmrRunning && ringAlert.hidden && !running) {
         document.title = `${fmtClock(tmrRemain)} · 타이머`;
       }
+      taSegDots();
     }
 
     function tmrSetTotal(sec) {
@@ -2240,12 +2292,161 @@
     tmrToggleBtn.addEventListener('click', () => (tmrRunning ? tmrPause() : tmrStart()));
     tmrResetBtn.addEventListener('click', () => { tmrStop(); tmrRemain = tmrTotal; tmrEl.classList.remove('done'); tmrRender(); });
 
-    // 타이머 화면에서 스페이스바로 시작/일시정지 (입력칸·버튼에 포커스가 있을 땐 제외)
+    // ---- 스톱워치 ----
+    const swEl = document.getElementById('sw');
+    const swRing = document.getElementById('swRing');
+    const swTimeEl = document.getElementById('swTime');
+    const swLabelEl = document.getElementById('swLabel');
+    const swToggleBtn = document.getElementById('swToggle');
+    const swSideBtn = document.getElementById('swSide');
+    const swLapsEl = document.getElementById('swLaps');
+    swRing.style.strokeDasharray = RING_CIRC;
+
+    let swAcc = 0;        // 멈춰 있던 동안까지 쌓인 시간(ms)
+    let swStartAt = 0;    // 마지막으로 시작한 시각
+    let swRunning = false;
+    let swTicker = null;
+    let swSplits = [];    // 랩을 누른 순간의 전체 경과 시간(ms)
+    let swCurrentRow = null;
+
+    const swElapsed = () => swAcc + (swRunning ? Date.now() - swStartAt : 0);
+
+    function fmtSw(ms) {
+      const cs = Math.floor(ms / 10) % 100;
+      const sec = Math.floor(ms / 1000);
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      return { main: h > 0 ? `${h}:${two(m)}:${two(s)}` : `${two(m)}:${two(s)}`, cs: two(cs) };
+    }
+    const fmtSwText = (ms) => { const f = fmtSw(ms); return `${f.main}.${f.cs}`; };
+
+    function swLapRow(n, lapMs, totalMs, cls) {
+      const li = document.createElement('li');
+      if (cls) li.className = cls;
+      const a = document.createElement('span'); a.className = 'lap-n'; a.textContent = `랩 ${n}`;
+      const b = document.createElement('span'); b.className = 'lap-t'; b.textContent = fmtSwText(lapMs);
+      const c = document.createElement('span'); c.className = 'lap-total'; c.textContent = fmtSwText(totalMs);
+      li.append(a, b, c);
+      return li;
+    }
+
+    // 랩 목록 전체를 다시 그림 (랩·리셋·시작·중지 때만). 진행 중인 랩은 매 틱마다 swRender에서 갱신
+    function swRenderLaps() {
+      swLapsEl.innerHTML = '';
+      swCurrentRow = null;
+      const total = swElapsed();
+      if (total === 0) return;
+      const last = swSplits.length ? swSplits[swSplits.length - 1] : 0;
+      swCurrentRow = swLapRow(swSplits.length + 1, total - last, total, 'current');
+      swLapsEl.append(swCurrentRow);
+      const laps = swSplits.map((t, i) => t - (i ? swSplits[i - 1] : 0));
+      const best = laps.length >= 2 ? Math.min(...laps) : null;
+      const worst = laps.length >= 2 ? Math.max(...laps) : null;
+      for (let i = laps.length - 1; i >= 0; i--) {
+        const cls = laps[i] === best ? 'best' : laps[i] === worst ? 'worst' : '';
+        swLapsEl.append(swLapRow(i + 1, laps[i], swSplits[i], cls));
+      }
+    }
+
+    function swRender() {
+      const ms = swElapsed();
+      const f = fmtSw(ms);
+      swTimeEl.firstChild.textContent = f.main;
+      swTimeEl.lastChild.textContent = `.${f.cs}`;
+      swTimeEl.classList.toggle('long', ms >= 3600 * 1000);
+      swRing.style.strokeDashoffset = RING_CIRC * (1 - (ms % 60000) / 60000);
+      const last = swSplits.length ? swSplits[swSplits.length - 1] : 0;
+      if (swCurrentRow) {
+        swCurrentRow.querySelector('.lap-t').textContent = fmtSwText(ms - last);
+        swCurrentRow.querySelector('.lap-total').textContent = fmtSwText(ms);
+      }
+      swLabelEl.textContent = swRunning ? (swSplits.length ? `랩 ${swSplits.length + 1} 측정 중` : '측정 중')
+        : ms > 0 ? '중지됨' : '대기 중';
+      swToggleBtn.textContent = swRunning ? '중지' : ms > 0 ? '계속' : '시작';
+      swSideBtn.textContent = swRunning || ms === 0 ? '랩' : '리셋';
+      swSideBtn.disabled = ms === 0;
+      if (swRunning && ringAlert.hidden && !running && !tmrRunning) {
+        document.title = `${f.main} · 스톱워치`;
+      }
+      taSegDots();
+    }
+
+    function swStart() {
+      if (swRunning) return;
+      swRunning = true;
+      swStartAt = Date.now();
+      swTicker = setInterval(swRender, 33);
+      swRenderLaps();
+      swRender();
+    }
+    function swStop() {
+      if (!swRunning) return;
+      swAcc = swElapsed();
+      swRunning = false;
+      clearInterval(swTicker);
+      swTicker = null;
+      if (ringAlert.hidden && !running && !tmrRunning) document.title = DEFAULT_TITLE;
+      swRenderLaps();
+      swRender();
+    }
+    function swLap() {
+      if (!swRunning) return;
+      swSplits.push(swElapsed());
+      swRenderLaps();
+      swRender();
+    }
+    function swReset() {
+      if (swRunning) return;
+      swAcc = 0;
+      swSplits = [];
+      swRenderLaps();
+      swRender();
+    }
+
+    swToggleBtn.addEventListener('click', () => (swRunning ? swStop() : swStart()));
+    swSideBtn.addEventListener('click', () => (swRunning ? swLap() : swReset()));
+
+    // ---- 타이머 ↔ 스톱워치 전환 ----
+    const TA_MODE_KEY = 'happs.timerMode';
+    const taSegBtns = Array.from(document.querySelectorAll('.ta-seg button'));
+    const taKbdHint = document.getElementById('taKbdHint');
+    let taMode = 'timer';
+
+    // 보고 있지 않은 쪽이 돌아가고 있으면 탭 이름 옆에 초록 점 표시
+    function taSegDots() {
+      taSegBtns.forEach((b) => {
+        const on = b.dataset.tmode !== taMode && (b.dataset.tmode === 'timer' ? tmrRunning : swRunning);
+        const dot = b.querySelector('.dot');
+        if (on && !dot) { const d = document.createElement('span'); d.className = 'dot'; d.setAttribute('aria-label', '실행 중'); b.append(d); }
+        if (!on && dot) dot.remove();
+      });
+    }
+
+    function taSetMode(mode) {
+      taMode = mode === 'sw' ? 'sw' : 'timer';
+      tmrEl.hidden = taMode !== 'timer';
+      swEl.hidden = taMode !== 'sw';
+      taSegBtns.forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tmode === taMode)));
+      taKbdHint.textContent = taMode === 'sw' ? '스페이스바: 시작/중지 · L: 랩' : '스페이스바: 시작/일시정지';
+      try { localStorage.setItem(TA_MODE_KEY, taMode); } catch (e) { /* 저장 불가 무시 */ }
+      taSegDots();
+    }
+    taSegBtns.forEach((b) => b.addEventListener('click', () => taSetMode(b.dataset.tmode)));
+    try { taSetMode(localStorage.getItem(TA_MODE_KEY) || 'timer'); } catch (e) { taSetMode('timer'); }
+    swRender();
+
+    // 이 화면에서 스페이스바로 시작/일시정지, 스톱워치는 L로 랩 (입력칸·버튼에 포커스가 있을 땐 제외)
     document.addEventListener('keydown', (e) => {
-      if (e.code !== 'Space' || views.timer.hidden || !ringAlert.hidden) return;
+      if (views.timer.hidden || !ringAlert.hidden || e.metaKey || e.ctrlKey || e.altKey) return;
       if (['INPUT', 'TEXTAREA', 'BUTTON', 'SELECT'].includes(e.target.tagName)) return;
-      e.preventDefault();
-      tmrRunning ? tmrPause() : tmrStart();
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (taMode === 'sw') swRunning ? swStop() : swStart();
+        else tmrRunning ? tmrPause() : tmrStart();
+      } else if (e.code === 'KeyL' && taMode === 'sw') {
+        swLap();
+      }
     });
 
     // ---- 알람 ----
