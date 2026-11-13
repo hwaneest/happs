@@ -475,6 +475,7 @@
       age:       { name: '만 나이 계산기', icon: '🎂' },
       checkhere: { name: 'Checkhere', icon: '🙋' },
       contact:   { name: 'Contact', icon: '✉️' },
+      workshop:  { name: '본부 워크샵 설문', icon: '📝' },
     };
     const DEV_NAMES = { mobile: '모바일', desktop: '데스크톱', tablet: '태블릿', unknown: '알 수 없음' };
     const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
@@ -1326,7 +1327,7 @@
     /* ============ 샘플 데이터 (배포 전 미리보기용) ============ */
     function makeDemo() {
       const pages = Object.keys(APPS);
-      const weight = { store: 10, counter: 6, pomodoro: 4, timer: 3, gpa: 3, todo: 3.5, dday: 2.5, age: 2, checkhere: 5, contact: 1 };
+      const weight = { store: 10, counter: 6, pomodoro: 4, timer: 3, gpa: 3, todo: 3.5, dday: 2.5, age: 2, checkhere: 5, contact: 1, workshop: 1.5 };
       const today = kstToday();
       const start = addDays(today, -119);
       let seed = 7;

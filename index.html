@@ -654,6 +654,95 @@
     }
     .contact-submit:hover { opacity: 0.88; }
     .contact-submit:disabled { opacity: 0.5; cursor: progress; }
+
+    /* ===== 본부 워크샵 설문 ===== */
+    .ws { max-width: 760px; }
+    .ws-tag {
+      display: inline-block; font-size: 12px; font-weight: 700; color: #e5484d;
+      background: color-mix(in srgb, #e5484d 12%, transparent); padding: 3px 10px; border-radius: 999px; margin-bottom: 10px;
+    }
+    .ws .app-header p { font-size: 14.5px; word-break: keep-all; margin-top: 4px; }
+    .ws .app-header p b { color: #e5484d; }
+    .ws-scope {
+      margin-top: 16px; border: 1.5px solid #d99a2b; border-radius: 14px; padding: 14px 18px;
+      background: color-mix(in srgb, #d99a2b 10%, transparent); font-size: 14px; word-break: keep-all;
+    }
+    .ws-scope strong { color: #b7791f; }
+    @media (prefers-color-scheme: dark) { .ws-scope strong { color: #f0b85a; } }
+    .ws-card {
+      --ws-c: var(--accent);
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      box-shadow: var(--shadow); padding: 22px 24px; margin-bottom: 18px;
+    }
+    @media (max-width: 520px) { .ws-card { padding: 18px 16px; } }
+    .ws-card.common { --ws-c: #0f8f8a; }
+    .ws-card.t1 { --ws-c: #2f6fd8; }
+    .ws-card.t2 { --ws-c: #9257bd; }
+    .ws-card.pick { --ws-c: #c98a1f; }
+    .ws-head {
+      margin: -22px -24px 18px; padding: 14px 24px; border-radius: 16px 16px 0 0;
+      background: color-mix(in srgb, var(--ws-c) 12%, transparent); border-bottom: 1px solid var(--border);
+    }
+    @media (max-width: 520px) { .ws-head { margin: -18px -16px 16px; padding: 12px 16px; } }
+    .ws-head .label { font-size: 12px; font-weight: 800; letter-spacing: 0.04em; color: var(--ws-c); }
+    .ws-head h2 { font-size: 17px; margin: 2px 0 0; letter-spacing: -0.01em; word-break: keep-all; }
+    .ws-who {
+      display: inline-block; font-size: 12px; font-weight: 700; color: var(--ws-c); background: var(--card);
+      border-radius: 999px; padding: 1px 9px; margin-left: 4px; vertical-align: 2px;
+    }
+    .ws-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    @media (max-width: 520px) { .ws-row { grid-template-columns: minmax(0, 1fr); } }
+    .ws-field { display: flex; flex-direction: column; gap: 8px; font-size: 14px; font-weight: 700; }
+    .ws-field .req, .ws-q .req { color: #e5484d; }
+    .ws input[type=text], .ws select, .ws textarea {
+      width: 100%; font-family: inherit; font-size: 15px; color: var(--text); background: var(--bg);
+      border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; outline: none;
+    }
+    .ws textarea { min-height: 88px; line-height: 1.6; resize: vertical; margin-top: 8px; }
+    .ws input:focus, .ws select:focus, .ws textarea:focus { border-color: var(--ws-c, var(--text)); }
+    .ws .invalid { border-color: #e5484d !important; }
+    .ws-q { margin-bottom: 20px; }
+    .ws-q:last-child { margin-bottom: 0; }
+    .ws-q-title { font-weight: 700; font-size: 15px; display: flex; gap: 6px; word-break: keep-all; }
+    .ws-q-no { color: var(--ws-c); font-weight: 800; min-width: 38px; flex-shrink: 0; }
+    .ws-hint { font-size: 13px; color: var(--muted); margin: 2px 0 0 44px; }
+    .ws-choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    @media (max-width: 600px) { .ws-choice { grid-template-columns: minmax(0, 1fr); } }
+    .ws-choice label {
+      --ws-c: #2f6fd8;
+      display: flex; align-items: flex-start; gap: 10px; border: 2px solid var(--border); border-radius: 12px;
+      padding: 14px 16px; cursor: pointer; font-size: 14.5px; font-weight: 700; transition: background 0.15s ease;
+      word-break: keep-all;
+    }
+    .ws-choice label.o2 { --ws-c: #9257bd; }
+    .ws-choice label:hover { background: var(--bg); }
+    .ws-choice label:has(input:checked) {
+      border-color: var(--ws-c); background: color-mix(in srgb, var(--ws-c) 10%, transparent);
+    }
+    .ws-choice input { width: 18px; height: 18px; margin-top: 3px; accent-color: var(--ws-c); flex-shrink: 0; }
+    .ws-choice small { display: block; font-weight: 500; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+    .ws-choice.invalid label { border-color: #e5484d; }
+    .ws-placeholder {
+      text-align: center; border: 2px dashed var(--border); border-radius: 16px; padding: 24px 20px;
+      color: var(--muted); font-size: 14.5px; margin-bottom: 18px;
+    }
+    .ws-submit-bar {
+      position: sticky; bottom: 0; z-index: 5; margin-top: 8px; padding: 14px 0 16px;
+      background: linear-gradient(to bottom, transparent, var(--bg) 30%);
+      display: flex; align-items: center; justify-content: flex-end; gap: 12px; flex-wrap: wrap;
+    }
+    .ws-progress { font-size: 13.5px; color: var(--muted); margin-right: auto; font-variant-numeric: tabular-nums; }
+    .ws-progress strong { color: var(--text); }
+    .ws-submit {
+      font-family: inherit; font-size: 15px; font-weight: 700; border: none; border-radius: 12px;
+      padding: 12px 26px; background: var(--text); color: var(--bg); cursor: pointer;
+    }
+    .ws-submit:hover { opacity: 0.88; }
+    .ws-submit:disabled { opacity: 0.5; cursor: progress; }
+    .ws-done { text-align: center; padding: 40px 24px; }
+    .ws-done .big { font-size: 44px; margin-bottom: 6px; }
+    .ws-done h2 { font-size: 20px; margin: 0 0 8px; }
+    .ws-done p { color: var(--muted); margin: 0 0 18px; font-size: 14.5px; word-break: keep-all; }
   </style>
 </head>
 <body>
@@ -825,6 +914,22 @@
           <div class="app-action">
             <span class="pill">열기</span>
             <span class="card-views" data-card-views="contact">조회수 <strong>–</strong></span>
+          </div>
+        </a>
+
+        <a class="app available" href="#workshop"
+           data-name="본부 워크샵 설문 workshop survey 4조 사전 의견 R&D기획운영실 연구본부 One Team 협업 AI 데이터">
+          <div class="app-top">
+            <div class="app-icon" style="background:#e6f3f2;">📝</div>
+            <div>
+              <p class="app-name">본부 워크샵 설문</p>
+              <div class="app-cat">설문</div>
+            </div>
+          </div>
+          <p class="app-desc">R&amp;D기획운영실 워크샵 4조 사전 의견을 받습니다. 제출하면 조 대표 이메일로 바로 전달됩니다.</p>
+          <div class="app-action">
+            <span class="pill">열기</span>
+            <span class="card-views" data-card-views="workshop">조회수 <strong>–</strong></span>
           </div>
         </a>
 
@@ -1373,6 +1478,102 @@
         </form>
       </div>
     </section>
+
+    <!-- ============ 본부 워크샵 설문 APP VIEW ============ -->
+    <section id="view-workshop" class="ws" hidden>
+      <button class="back" data-nav="#store">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        앱 목록
+      </button>
+
+      <header class="app-header">
+        <span class="ws-tag">Bio연구본부 실별 워크샵</span>
+        <h1>[R&amp;D기획운영실 워크샵 4조] 사전 의견 요청</h1>
+        <p>안녕하세요, 4조 대표 김동환입니다. 11/20(금) 패들렛 제출 전에 조 논의를 효율적으로 하기 위해 사전 의견을 받고자 합니다.
+           짧게, 키워드만 적어 주셔도 충분합니다. <b>11/18(수) 23:59까지</b> 제출 부탁드립니다. (10분 내외)</p>
+        <div class="ws-scope">
+          📌 <strong>답변 범위: 총 8문항</strong> — 공통주제 4문항 + 실별 주제 ①·② 중 <strong>1개 선택</strong> 4문항.
+          Q0에서 주제를 고르면 해당 질문만 나타납니다.
+        </div>
+        <div class="views" data-views="workshop">조회수 <strong>–</strong></div>
+      </header>
+
+      <form id="wsForm" novalidate>
+        <div class="ws-card">
+          <div class="ws-row">
+            <label class="ws-field">
+              <span>이름 <span class="req">*</span></span>
+              <input type="text" name="name" placeholder="예: 홍길동" autocomplete="name" />
+            </label>
+            <label class="ws-field">
+              <span>소속 팀 <span class="req">*</span></span>
+              <select name="team">
+                <option value="">선택해 주세요</option>
+                <option>R&amp;D기획팀</option>
+                <option>GCLP팀</option>
+                <option>NCS팀</option>
+                <option>Bio규제관리팀</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="ws-card pick" id="wsPick">
+          <div class="ws-head">
+            <div class="label">실별 주제 선택</div>
+            <h2>Q0. 둘 중 답변할 주제 하나를 골라 주세요. <span class="req" style="color:#e5484d">*</span></h2>
+          </div>
+          <div class="ws-choice" id="wsChoice">
+            <label class="o1"><input type="radio" name="topic" value="1" />
+              <span>① 연구본부 역할 강화를 위한 업무 개선<small>시간·노력, 중복 절차, 표준화, 단기 개선</small></span></label>
+            <label class="o2"><input type="radio" name="topic" value="2" />
+              <span>② AI·데이터를 활용한 미래형 연구 운영<small>자동화, 데이터 기반 판단, 지켜야 할 원칙, 정보 연결</small></span></label>
+          </div>
+        </div>
+
+        <div class="ws-card common">
+          <div class="ws-head">
+            <div class="label">공통주제 · COMMON THEME</div>
+            <h2>One Team 협업 방식 <span class="ws-who">모두 답변</span></h2>
+          </div>
+          <div data-ws-set="common"></div>
+        </div>
+
+        <div class="ws-placeholder" id="wsPlaceholder">⬆ Q0에서 실별 주제를 고르면 해당 주제의 질문 4개가 여기에 나타납니다.</div>
+
+        <div class="ws-card t1" id="wsSec1" hidden>
+          <div class="ws-head">
+            <div class="label">실별 주제 ①</div>
+            <h2>연구본부 역할 강화를 위한 업무 개선 <span class="ws-who">①을 고른 분만</span></h2>
+          </div>
+          <div data-ws-set="1"></div>
+        </div>
+
+        <div class="ws-card t2" id="wsSec2" hidden>
+          <div class="ws-head">
+            <div class="label">실별 주제 ②</div>
+            <h2>AI·데이터를 활용한 미래형 연구 운영 <span class="ws-who">②를 고른 분만</span></h2>
+          </div>
+          <div data-ws-set="2"></div>
+        </div>
+
+        <div class="ws-submit-bar">
+          <span class="ws-progress" id="wsProgress"></span>
+          <button type="button" class="tool" id="wsReset">초기화</button>
+          <button type="submit" class="ws-submit" id="wsSubmit">제출하기 →</button>
+        </div>
+      </form>
+
+      <div class="ws-card ws-done" id="wsDone" hidden>
+        <div class="big">🙌</div>
+        <h2>제출됐습니다. 감사합니다!</h2>
+        <p>보내 주신 의견은 4조 대표에게 이메일로 전달되었습니다. 11/20(금) 조 논의 때 함께 정리할게요.</p>
+        <button type="button" class="tool" id="wsAgain">다시 작성하기</button>
+      </div>
+    </section>
   </div>
 
   <!-- ============ CHECKHERE POPUP ============ -->
@@ -1431,6 +1632,7 @@
       timer: document.getElementById('view-timer'),
       checkhere: document.getElementById('view-checkhere'),
       contact: document.getElementById('view-contact'),
+      workshop: document.getElementById('view-workshop'),
     };
 
     function route() {
@@ -2815,6 +3017,170 @@
         showToast('전송에 실패했습니다. 잠시 후 다시 시도해 주세요.');
       }
     });
+
+    /* ============ 본부 워크샵 설문 ============ */
+    // Workshop.gs 를 Apps Script 웹앱으로 배포한 뒤 URL을 아래에 붙여넣으세요.
+    // (응답은 Workshop.gs 의 TO_EMAIL 로 메일 발송됩니다.)
+    const WORKSHOP_ENDPOINT = 'https://script.google.com/macros/s/AKfycbx3OYrwjbZu04zlv30GYRlCY8cgdXilxC1DqRx8OFBme5KsFOhVyjdtCa9grn4kMO5n8g/exec';
+
+    const WS_KEY = 'happs_workshop4_v1';   // 작성 중인 답을 이 브라우저에 임시 저장
+    const WS_SETS = {
+      common: [
+        ['q1', 'Q1.', '다른 팀·실과 일할 때 지연이나 재작업이 생겼던 사례 1~2개', '어떤 업무에서 / 무엇 때문에 / 얼마나 늦어졌는지'],
+        ['q2', 'Q2.', '그 일을 시작할 때 “이것만 미리 합의했으면 좋았을” 정보나 기준'],
+        ['q3', 'Q3.', '회의·보고·검토 과정에서 줄이거나 바꾸고 싶은 것 1가지'],
+        ['q4', 'Q4.', '연구본부 협업 원칙으로 제안하고 싶은 한 줄', '예: “요청할 땐 기한과 목적을 함께”'],
+      ],
+      1: [
+        ['q5', 'Q5.', '업무에서 가장 시간과 노력이 많이 드는 영역'],
+        ['q6', 'Q6.', '중복되거나 불필요하다고 느끼는 보고·승인·시스템 절차'],
+        ['q7', 'Q7.', '팀마다 방식이 달라 통합·표준화하면 효과가 클 업무'],
+        ['q8', 'Q8.', '단기간에 바꾸면 연구 현장이 바로 체감할 개선 과제'],
+      ],
+      2: [
+        ['q5', "Q5'.", '반복적으로 손으로 하는 업무 중 자동화되면 좋을 업무', '주당 소요 시간도 대략'],
+        ['q6', "Q6'.", '감이나 경험보다 데이터에 근거한 판단이 더 필요한 운영 업무'],
+        ['q7', "Q7'.", 'AI·데이터를 업무에 쓸 때 꼭 지켜야 한다고 생각하는 것', '규제·품질·보안 관점 등'],
+        ['q8', "Q8'.", '여러 시스템·파일·메일에 흩어져 찾느라 시간이 드는 정보와, 이를 연결할 아이디어'],
+      ],
+    };
+
+    const wsForm = document.getElementById('wsForm');
+    const wsSubmit = document.getElementById('wsSubmit');
+    const wsDone = document.getElementById('wsDone');
+
+    // 질문 칸 만들기 (textarea 의 data-set 으로 주제별 칸을 구분)
+    Object.entries(WS_SETS).forEach(([set, qs]) => {
+      const box = document.querySelector(`[data-ws-set="${set}"]`);
+      qs.forEach(([key, no, title, hint]) => {
+        const q = document.createElement('label');
+        q.className = 'ws-q';
+        q.style.display = 'block';
+        q.innerHTML = `<div class="ws-q-title"><span class="ws-q-no"></span><span></span></div>`
+          + (hint ? `<div class="ws-hint"></div>` : '')
+          + `<textarea placeholder="키워드만 적어도 괜찮아요"></textarea>`;
+        q.querySelector('.ws-q-no').textContent = no;
+        q.querySelector('.ws-q-title span:last-child').textContent = title;
+        if (hint) q.querySelector('.ws-hint').textContent = hint;
+        const ta = q.querySelector('textarea');
+        ta.dataset.set = set;
+        ta.dataset.key = key;
+        box.appendChild(q);
+      });
+    });
+
+    const wsTopic = () => (wsForm.querySelector('input[name=topic]:checked') || {}).value || '';
+    const wsBoxes = (set) => [...wsForm.querySelectorAll(`textarea[data-set="${set}"]`)];
+    const wsActive = () => [...wsBoxes('common'), ...(wsTopic() ? wsBoxes(wsTopic()) : [])];
+
+    function wsRender() {
+      const t = wsTopic();
+      document.getElementById('wsSec1').hidden = t !== '1';
+      document.getElementById('wsSec2').hidden = t !== '2';
+      document.getElementById('wsPlaceholder').hidden = !!t;
+      const n = wsActive().filter((ta) => ta.value.trim()).length;
+      document.getElementById('wsProgress').innerHTML = `<strong>${n}</strong> / 8 문항 작성` + (t ? '' : ' · 실별 주제 미선택');
+    }
+
+    function wsSave() {
+      const d = { name: wsForm.elements.name.value, team: wsForm.elements.team.value, topic: wsTopic(), a: {} };
+      wsForm.querySelectorAll('textarea').forEach((ta) => { d.a[ta.dataset.set + ta.dataset.key] = ta.value; });
+      try { localStorage.setItem(WS_KEY, JSON.stringify(d)); } catch (e) {}
+    }
+
+    function wsLoad() {
+      let d = null;
+      try { d = JSON.parse(localStorage.getItem(WS_KEY) || 'null'); } catch (e) {}
+      if (!d) return;
+      wsForm.elements.name.value = d.name || '';
+      wsForm.elements.team.value = d.team || '';
+      wsForm.querySelectorAll('input[name=topic]').forEach((r) => { r.checked = r.value === d.topic; });
+      wsForm.querySelectorAll('textarea').forEach((ta) => { ta.value = (d.a || {})[ta.dataset.set + ta.dataset.key] || ''; });
+    }
+
+    function wsClear() {
+      try { localStorage.removeItem(WS_KEY); } catch (e) {}
+      wsForm.reset();
+      wsForm.querySelectorAll('.invalid').forEach((el) => el.classList.remove('invalid'));
+      wsRender();
+    }
+
+    function wsValidate() {
+      const bad = [];
+      if (!wsForm.elements.name.value.trim()) bad.push(wsForm.elements.name);
+      if (!wsForm.elements.team.value) bad.push(wsForm.elements.team);
+      if (!wsTopic()) bad.push(document.getElementById('wsChoice'));
+      [wsForm.elements.name, wsForm.elements.team, document.getElementById('wsChoice')]
+        .forEach((el) => el.classList.toggle('invalid', bad.includes(el)));
+      if (bad.length) {
+        bad[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (bad[0].focus) bad[0].focus({ preventScroll: true });
+      }
+      return bad.length === 0;
+    }
+
+    wsForm.addEventListener('input', (e) => {
+      e.target.classList.remove('invalid');
+      wsSave();
+      wsRender();
+    });
+    wsForm.addEventListener('change', (e) => {
+      e.target.classList.remove('invalid');
+      if (e.target.name === 'topic') {
+        document.getElementById('wsChoice').classList.remove('invalid');
+        wsRender();
+        const sec = document.getElementById(e.target.value === '1' ? 'wsSec1' : 'wsSec2');
+        setTimeout(() => sec.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+      }
+      wsSave();
+    });
+
+    document.getElementById('wsReset').addEventListener('click', () => {
+      if (window.confirm('작성한 내용을 모두 지울까요?')) wsClear();
+    });
+    document.getElementById('wsAgain').addEventListener('click', () => {
+      wsDone.hidden = true;
+      wsForm.hidden = false;
+      window.scrollTo(0, 0);
+    });
+
+    wsForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!wsValidate()) { showToast('이름, 소속 팀, 실별 주제(Q0)를 확인해 주세요.'); return; }
+      const empty = wsActive().filter((ta) => !ta.value.trim()).length;
+      if (empty && !window.confirm(`${empty}개 문항이 비어 있어요. 이대로 제출할까요?`)) return;
+      if (!WORKSHOP_ENDPOINT) { showToast('아직 메일 전송이 연결되지 않았어요. 관리자에게 알려 주세요.'); return; }
+
+      const data = new URLSearchParams({
+        name: wsForm.elements.name.value.trim(),
+        team: wsForm.elements.team.value,
+        topic: wsTopic(),
+      });
+      wsActive().forEach((ta) => data.set(ta.dataset.key, ta.value.trim()));
+
+      wsSubmit.disabled = true;
+      wsSubmit.textContent = '보내는 중…';
+      let res;
+      try {
+        res = await (await fetch(WORKSHOP_ENDPOINT, { method: 'POST', body: data })).json();
+      } catch (err) {
+        res = { ok: false, error: String(err) };
+      }
+      wsSubmit.disabled = false;
+      wsSubmit.textContent = '제출하기 →';
+
+      if (res.ok) {
+        wsClear();
+        wsForm.hidden = true;
+        wsDone.hidden = false;
+        window.scrollTo(0, 0);
+      } else {
+        showToast('제출에 실패했습니다. 잠시 후 다시 시도해 주세요. (작성 내용은 그대로 남아 있어요)');
+      }
+    });
+
+    wsLoad();
+    wsRender();
 
     // 초기화
     update();
