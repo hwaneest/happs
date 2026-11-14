@@ -346,6 +346,8 @@
           <div class="card"><h2>브라우저</h2><p class="desc">조회수 기준</p><div class="hlist" id="brList"></div></div>
           <div class="card"><h2>운영체제</h2><p class="desc">조회수 기준</p><div class="hlist" id="osList"></div></div>
           <div class="card"><h2>언어</h2><p class="desc">브라우저 언어 설정</p><div class="hlist" id="langList"></div></div>
+          <div class="card"><h2>국가</h2><p class="desc">접속 IP로 판별 · IP는 저장하지 않음</p><div class="hlist" id="ctryList"></div></div>
+          <div class="card"><h2>도시</h2><p class="desc">통신사 기준이라 실제 위치와 다를 수 있음</p><div class="hlist" id="cityList"></div></div>
         </div>
       </div>
 
@@ -367,6 +369,8 @@
             <button data-dim="br">브라우저</button>
             <button data-dim="os">운영체제</button>
             <button data-dim="lang">언어</button>
+            <button data-dim="ctry">국가</button>
+            <button data-dim="city">도시</button>
           </div>
           <div class="table-wrap scroll-y"><table id="dailyTable"></table></div>
         </div>
@@ -572,7 +576,7 @@
       const days = dateList(from, to);
       const out = {
         views: 0, newV: 0, visitors: new Set(), daily: [], hours: Array(24).fill(0), wd: Array(7).fill(0), wdDays: Array(7).fill(0),
-        dims: { dev: {}, br: {}, os: {}, ref: {}, lang: {} }, byPage: {},
+        dims: { dev: {}, br: {}, os: {}, ref: {}, lang: {}, ctry: {}, city: {} }, byPage: {},
       };
       pages.forEach((p) => { out.byPage[p] = { views: 0, visitors: new Set(), daily: [] }; });
       days.forEach((d) => {
@@ -730,7 +734,7 @@
       renderBreakdown(pages, cur);
     }
 
-    // 방문 환경 카드 (기기 · 신규/재방문 · 유입 경로 · 브라우저 · OS · 언어)
+    // 방문 환경 카드 (기기 · 신규/재방문 · 유입 경로 · 브라우저 · OS · 언어 · 국가 · 도시)
     function renderBreakdown(pages, rangeAgg) {
       const days = dateList(state.from, state.to);
       if (state.breakDay && !days.includes(state.breakDay)) state.breakDay = null;
@@ -753,12 +757,34 @@
       hlist($('brList'), agg.dims.br);
       hlist($('osList'), agg.dims.os);
       hlist($('langList'), agg.dims.lang, null, 6);
+      hlist($('ctryList'), agg.dims.ctry, dimName.ctry, 6);
+      hlist($('cityList'), agg.dims.city, dimName.city, 8);
     }
 
     const dimName = {
       dev: (k) => DEV_NAMES[k] || k,
       ref: (k) => (k === '(direct)' ? '직접 방문 · 북마크' : k),
+      ctry: (k) => (k === 'unknown' ? '알 수 없음' : countryName(k)),
+      city: (k) => {
+        if (k === 'unknown') return '알 수 없음';
+        const [c, city] = k.split('|');
+        return `${city} · ${countryName(c)}`;
+      },
     };
+    // 국가 코드(KR) → 한국어 국가 이름(대한민국)
+    let regionNames = null;
+    function countryName(code) {
+      if (!code) return '–';
+      try {
+        regionNames = regionNames || new Intl.DisplayNames(['ko'], { type: 'region' });
+        return regionNames.of(code) || code;
+      } catch (e) { return code; }
+    }
+    // 최근 방문 표·내보내기용 지역 글자 (예: Seoul · 대한민국)
+    function placeLabel(r) {
+      if (!r.ctry) return '';
+      return r.city ? `${r.city} · ${countryName(r.ctry)}` : countryName(r.ctry);
+    }
     function nvCounts(agg) {
       const visitors = agg.visitors.size;
       return { '신규 방문자': Math.min(agg.newV, visitors), '재방문자': Math.max(0, visitors - agg.newV) };
@@ -776,7 +802,7 @@
       renderOverview();
     });
 
-    const DIM_LABELS = { app: '앱별', dev: '기기', nv: '신규 · 재방문', ref: '유입 경로', br: '브라우저', os: '운영체제', lang: '언어' };
+    const DIM_LABELS = { app: '앱별', dev: '기기', nv: '신규 · 재방문', ref: '유입 경로', br: '브라우저', os: '운영체제', lang: '언어', ctry: '국가', city: '도시' };
 
     // 일자별 표의 데이터: 날짜마다 열(앱 또는 방문 환경 항목)별 숫자
     function dailyMatrix(dim = state.dailyDim, from = state.from, to = state.to, dimPages = selectedPages()) {
@@ -917,7 +943,7 @@
     function renderRecent() {
       const rows = state.data.recent || [];
       $('recentDesc').textContent = `가장 최근 ${fmt(rows.length)}건 · 방문자 번호는 앞 8자리만 표시`;
-      $('recentTable').innerHTML = `<thead><tr><th>시각</th><th class="l">앱</th><th class="l">방문자</th><th class="l">기기</th><th class="l">브라우저</th><th class="l">OS</th><th class="l">유입 경로</th><th class="l">언어</th></tr></thead><tbody>`
+      $('recentTable').innerHTML = `<thead><tr><th>시각</th><th class="l">앱</th><th class="l">방문자</th><th class="l">기기</th><th class="l">브라우저</th><th class="l">OS</th><th class="l">유입 경로</th><th class="l">언어</th><th class="l">지역</th></tr></thead><tbody>`
         + (rows.length ? rows.map((r) => `<tr>
             <td>${fmtTime(r.t)}</td>
             <td class="l">${appIcon(r.p)} ${esc(appName(r.p))}</td>
@@ -926,8 +952,9 @@
             <td class="l">${esc(r.br || '–')}</td>
             <td class="l">${esc(r.os || '–')}</td>
             <td class="l">${esc(r.ref || '직접')}</td>
-            <td class="l">${esc(r.lang || '–')}</td></tr>`).join('')
-          : '<tr><td colspan="8" class="muted" style="text-align:center; padding:30px;">아직 기록이 없습니다.</td></tr>')
+            <td class="l">${esc(r.lang || '–')}</td>
+            <td class="l">${esc(placeLabel(r) || '–')}</td></tr>`).join('')
+          : '<tr><td colspan="9" class="muted" style="text-align:center; padding:30px;">아직 기록이 없습니다.</td></tr>')
         + '</tbody>';
     }
 
@@ -1050,8 +1077,8 @@
     $('csvRecent').addEventListener('click', async () => {
       const name = `happs-recent-${state.data.today}.csv`;
       if (!(await confirmDownload(name))) return;
-      const rows = [['시각', '앱', '방문자', '신규', '기기', '브라우저', 'OS', '유입 경로', '언어']];
-      (state.data.recent || []).forEach((r) => rows.push([fmtTime(r.t), appName(r.p), r.vid, r.n ? 'Y' : '', r.dev, r.br, r.os, r.ref, r.lang]));
+      const rows = [['시각', '앱', '방문자', '신규', '기기', '브라우저', 'OS', '유입 경로', '언어', '국가', '도시']];
+      (state.data.recent || []).forEach((r) => rows.push([fmtTime(r.t), appName(r.p), r.vid, r.n ? 'Y' : '', r.dev, r.br, r.os, r.ref, r.lang, r.ctry ? countryName(r.ctry) : '', r.city || '']));
       download(name, toCsv(rows), 'text/csv;charset=utf-8');
     });
     // 관리 탭 '전체 데이터 내보내기': 기록된 전체 기간 · 모든 앱 기준 표 묶음
@@ -1096,8 +1123,8 @@
       hourRows.push(['전체', ...all.hours, all.views]);
       tables.push({ name: '시간대별', rows: hourRows });
 
-      tables.push({ name: '최근 방문', rows: [['시각', '앱', '방문자', '신규', '기기', '브라우저', 'OS', '유입 경로', '언어']]
-        .concat((d.recent || []).map((r) => [fmtTime(r.t), appName(r.p), r.vid, r.n ? 'Y' : '', dimName.dev(r.dev || '') || '', r.br, r.os, r.ref || '직접', r.lang])) });
+      tables.push({ name: '최근 방문', rows: [['시각', '앱', '방문자', '신규', '기기', '브라우저', 'OS', '유입 경로', '언어', '국가', '도시']]
+        .concat((d.recent || []).map((r) => [fmtTime(r.t), appName(r.p), r.vid, r.n ? 'Y' : '', dimName.dev(r.dev || '') || '', r.br, r.os, r.ref || '직접', r.lang, r.ctry ? countryName(r.ctry) : '', r.city || ''])) });
 
       // 날짜 × 앱 × 항목마다 한 줄 — 피벗 테이블로 원하는 대로 다시 묶을 수 있습니다
       const long = [['날짜', '앱', '구분', '항목', '값']];
@@ -1105,7 +1132,7 @@
         const app = appName(b.p);
         long.push([b.d, app, '조회수', '', b.v], [b.d, app, '방문자', '', b.vs.length], [b.d, app, '신규 방문자', '', b.n]);
         Object.entries(b.h).sort((x, y) => x[0] - y[0]).forEach(([h, n]) => long.push([b.d, app, '시간대', `${h}시`, n]));
-        ['dev', 'ref', 'br', 'os', 'lang'].forEach((k) => {
+        ['dev', 'ref', 'br', 'os', 'lang', 'ctry', 'city'].forEach((k) => {
           const nameFn = dimName[k] || ((x) => x);
           Object.entries(b[k] || {}).sort((x, y) => y[1] - x[1]).forEach(([name, n]) => long.push([b.d, app, DIM_LABELS[k], nameFn(name), n]));
         });
@@ -1349,11 +1376,13 @@
           const ref = pick({ '(direct)': 5, 'google.com': 2, 'naver.com': 2.5, 'instagram.com': 1, 'kakao.com': 1.5, 'github.com': 0.5 });
           const br = dev === 'desktop' ? pick({ Chrome: 6, Edge: 2, Safari: 2, Firefox: 0.5 }) : pick({ Safari: 4, Chrome: 3, Samsung: 1.5, KakaoTalk: 1, 'Naver/Whale': 1 });
           const os = dev === 'desktop' ? pick({ Windows: 6, macOS: 3.5, Linux: 0.3 }) : pick({ iOS: 5, Android: 4 });
+          const place = pick({ 'KR|Seoul': 5, 'KR|Seongnam-si': 2, 'KR|Incheon': 1, 'KR|Busan': 1, 'KR|Daejeon': 0.6, 'KR|': 0.4, 'US|San Jose': 0.2, 'JP|Tokyo': 0.2, unknown: 0.6 });
+          const [ctry, city] = place === 'unknown' ? ['', ''] : place.split('|');
           const hour = Math.min(23, Math.max(0, Math.round(14 + (rnd() + rnd() + rnd() - 1.5) * 9)));
           for (let v = 0; v < views; v++) {
             const p = v === 0 && rnd() < 0.5 ? 'store' : pick(weight);
             const id = d + '|' + p;
-            const b = buckets[id] || (buckets[id] = { d, p, v: 0, n: 0, h: {}, dev: {}, br: {}, os: {}, ref: {}, lang: {}, vs: [] });
+            const b = buckets[id] || (buckets[id] = { d, p, v: 0, n: 0, h: {}, dev: {}, br: {}, os: {}, ref: {}, lang: {}, ctry: {}, city: {}, vs: [] });
             b.v++;
             if (isNew && v === 0) b.n++;
             b.h[hour] = (b.h[hour] || 0) + 1;
@@ -1363,8 +1392,12 @@
             b.ref[ref] = (b.ref[ref] || 0) + 1;
             const lang = rnd() < 0.92 ? 'ko-KR' : 'en-US';
             b.lang[lang] = (b.lang[lang] || 0) + 1;
+            const ck = ctry || 'unknown';
+            const cityKey = ctry && city ? ctry + '|' + city : 'unknown';
+            b.ctry[ck] = (b.ctry[ck] || 0) + 1;
+            b.city[cityKey] = (b.city[cityKey] || 0) + 1;
             if (!b.vs.includes(vid)) b.vs.push(vid);
-            if (di > 116) recent.push({ t: new Date(d + `T${String(hour).padStart(2, '0')}:${String(Math.floor(rnd() * 60)).padStart(2, '0')}:00+09:00`).getTime(), p, vid: 'demo' + vid.toString(36).padStart(4, '0'), n: isNew && v === 0, dev, br, os, ref: ref === '(direct)' ? '' : ref, lang });
+            if (di > 116) recent.push({ t: new Date(d + `T${String(hour).padStart(2, '0')}:${String(Math.floor(rnd() * 60)).padStart(2, '0')}:00+09:00`).getTime(), p, vid: 'demo' + vid.toString(36).padStart(4, '0'), n: isNew && v === 0, dev, br, os, ref: ref === '(direct)' ? '' : ref, lang, ctry, city });
           }
         }
       });

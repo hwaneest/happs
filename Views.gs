@@ -6,7 +6,7 @@
  *   새 값을 돌려줍니다. all=1 이면 모든 페이지의 조회수(all)도 함께 돌려줍니다.
  *   누적 값은 스크립트 속성(PropertiesService)에 저장되고,
  *   방문 한 건 한 건은 통계 시트의 'events' 탭에 한 줄씩 쌓입니다
- *   (일자별·앱별·시간대·기기·유입경로 통계는 이 기록으로 계산합니다).
+ *   (일자별·앱별·시간대·기기·유입경로·지역 통계는 이 기록으로 계산합니다).
  *   nt=1 이면 숫자만 돌려주고 기록하지 않습니다 (관리자 본인 방문 제외용).
  *
  * 동작 2 — 관리자 API (POST, admin.html 에서 호출):
@@ -27,7 +27,7 @@
 var PAGES = ['store', 'counter', 'pomodoro', 'timer', 'gpa', 'todo', 'dday', 'age', 'checkhere', 'contact', 'workshop'];
 var TZ = 'Asia/Seoul';
 var SHEET_NAME = 'events';
-var HEADERS = ['time', 'date', 'hour', 'page', 'visitor', 'new', 'device', 'browser', 'os', 'referrer', 'lang'];
+var HEADERS = ['time', 'date', 'hour', 'page', 'visitor', 'new', 'device', 'browser', 'os', 'referrer', 'lang', 'country', 'region', 'city'];
 var STATS_DAYS = 400;   // 관리자 화면으로 보내는 최대 기간 (일)
 var RECENT = 200;       // 최근 방문 기록 줄 수
 
@@ -107,7 +107,10 @@ function logEvent(page, params) {
     clean(params.br, 20),
     clean(params.os, 20),
     clean(params.ref, 80),
-    clean(params.lang, 10)
+    clean(params.lang, 10),
+    clean(params.ctry, 2),   // 국가 코드 (Vercel 이 판별, IP 는 받지 않음)
+    clean(params.rgn, 10),   // 지역 코드
+    clean(params.city, 40)   // 도시
   ]);
 }
 
@@ -165,7 +168,7 @@ function stats() {
     if (date < since) continue;
 
     var id = date + '|' + r[3];
-    var b = buckets[id] || (buckets[id] = { d: date, p: r[3], v: 0, n: 0, h: {}, dev: {}, br: {}, os: {}, ref: {}, lang: {}, vs: {} });
+    var b = buckets[id] || (buckets[id] = { d: date, p: r[3], v: 0, n: 0, h: {}, dev: {}, br: {}, os: {}, ref: {}, lang: {}, ctry: {}, city: {}, vs: {} });
     b.v++;
     if (r[5] == 1) b.n++;
     bump(b.h, r[2]);
@@ -174,6 +177,8 @@ function stats() {
     bump(b.os, r[8] || 'unknown');
     bump(b.ref, r[9] || '(direct)');
     bump(b.lang, r[10] || 'unknown');
+    bump(b.ctry, r[11] || 'unknown');
+    bump(b.city, r[11] && r[13] ? r[11] + '|' + r[13] : 'unknown');
     var vid = String(r[4] || ('row' + i));
     if (!(vid in vidIndex)) vidIndex[vid] = nextVid++;
     b.vs[vidIndex[vid]] = 1;
@@ -190,7 +195,8 @@ function stats() {
     return {
       t: r[0] instanceof Date ? r[0].getTime() : String(r[0]),
       p: r[3], vid: String(r[4] || '').slice(0, 8), n: r[5] == 1,
-      dev: r[6], br: r[7], os: r[8], ref: r[9], lang: r[10]
+      dev: r[6], br: r[7], os: r[8], ref: r[9], lang: r[10],
+      ctry: r[11], rgn: r[12], city: r[13]
     };
   });
 
@@ -235,6 +241,10 @@ function getSheet() {
     sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]).setFontWeight('bold');
     sheet.setFrozenRows(1);
     sheet.getRange('B:B').setNumberFormat('@');  // 날짜가 시간대에 따라 바뀌지 않도록 글자로 저장
+  }
+  // 나중에 맨 끝에 추가한 열(지역 등)의 제목이 비어 있으면 채웁니다.
+  if (sheet.getRange(1, HEADERS.length).getValue() === '') {
+    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]).setFontWeight('bold');
   }
   return sheet;
 }
