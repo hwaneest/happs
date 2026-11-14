@@ -71,7 +71,6 @@
     .login input { width: 100%; }
     .login .btn { width: 100%; margin-top: 10px; padding: 11px; }
     .login .err { color: var(--bad); font-size: 13px; min-height: 20px; margin-top: 8px; }
-    .linkbtn { background: none; border: none; color: var(--muted); text-decoration: underline; cursor: pointer; padding: 0; font-size: 13px; }
 
     .logo {
       width: 44px; height: 44px; border-radius: 13px;
@@ -104,7 +103,6 @@
     .top h1 { margin: 0; font-size: 20px; letter-spacing: -0.02em; }
     .top .sub { color: var(--muted); font-size: 13px; }
     .top .spacer { flex: 1; }
-    .demo-badge { font-size: 12px; font-weight: 700; color: var(--bad); border: 1px solid currentColor; border-radius: 999px; padding: 2px 9px; }
     .tabs { display: flex; gap: 4px; margin: 22px 0 14px; border-bottom: 1px solid var(--border); overflow-x: auto; }
     .tabs button {
       border: none; background: none; padding: 10px 14px; cursor: pointer; font-weight: 700;
@@ -259,7 +257,6 @@
         <input id="loginKey" type="password" placeholder="관리자 비밀번호" autocomplete="current-password" />
         <button class="btn primary" id="loginBtn" type="submit">로그인</button>
         <div class="err" id="loginErr"></div>
-        <button class="linkbtn" type="button" id="demoBtn">샘플 데이터로 미리보기</button>
       </form>
     </section>
 
@@ -268,7 +265,7 @@
       <div class="top">
         <div class="logo">H</div>
         <div>
-          <h1>HAPPS 관리자 <span class="demo-badge" id="demoBadge" hidden>샘플 데이터</span></h1>
+          <h1>HAPPS 관리자</h1>
           <div class="sub" id="updatedAt"></div>
         </div>
         <div class="spacer"></div>
@@ -486,7 +483,7 @@
 
     /* ============ 상태 ============ */
     const state = {
-      key: null, demo: false, data: null, index: null,
+      key: null, data: null, index: null,
       tab: 'overview', range: '30', from: null, to: null, app: 'all',
       dailySort: { col: 'date', dir: -1 },
       breakDay: null,   // 방문 환경 카드에서 고른 날짜 (null = 선택한 기간 전체)
@@ -535,7 +532,7 @@
     async function load() {
       $('refreshBtn').disabled = true;
       try {
-        const data = state.demo ? makeDemo() : await api('stats');
+        const data = await api('stats');
         if (!data.ok) {
           if (data.auth === false) { logout(); $('loginErr').textContent = data.error; return; }
           throw new Error(data.error || '알 수 없는 오류');
@@ -557,7 +554,6 @@
       data.buckets.forEach((b) => { (idx[b.d] || (idx[b.d] = {}))[b.p] = b; });
       state.index = idx;
       $('updatedAt').textContent = `업데이트 ${fmtTime(Date.now())} · 기록 ${fmt(data.totalEvents)}건`;
-      $('demoBadge').hidden = !state.demo;
       const pages = data.pages || Object.keys(APPS);
       $('appFilter').innerHTML = '<option value="all">전체 앱</option>'
         + pages.map((p) => `<option value="${esc(p)}">${esc(appName(p))}</option>`).join('');
@@ -982,12 +978,9 @@
       if (!confirm(`${appName(p)}의 누적 조회수를 ${fmt(+val)}(으)로 바꿀까요?`)) return;
       btn.disabled = true;
       try {
-        if (state.demo) state.data.cumulative[p] = +val;
-        else {
-          const res = await api('setViews', { page: p, views: val });
-          if (!res.ok) throw new Error(res.error);
-          state.data.cumulative = res.cumulative;
-        }
+        const res = await api('setViews', { page: p, views: val });
+        if (!res.ok) throw new Error(res.error);
+        state.data.cumulative = res.cumulative;
         toast('저장했습니다.');
         renderManage();
       } catch (err) {
@@ -1011,7 +1004,6 @@
           return `<span class="status-dot ok"></span>${name} ${Math.round(performance.now() - t0)}ms`;
         } catch (e) { return `<span class="status-dot fail"></span>${name} 실패`; }
       };
-      if (state.demo) { $('healthInfo').textContent = '샘플 데이터 모드에서는 확인하지 않습니다.'; return; }
       const results = await Promise.all([
         check('조회수', VIEWS_ENDPOINT), check('Checkhere', CHECKHERE_ENDPOINT), check('Contact', CONTACT_ENDPOINT),
       ]);
@@ -1326,7 +1318,7 @@
       setTab(getItem('sessionStorage', 'happs_admin_tab') || 'overview');
     }
     function logout() {
-      state.key = null; state.data = null; state.demo = false;
+      state.key = null; state.data = null;
       setItem('sessionStorage', 'happs_admin_key', null);
       $('loadingView').hidden = true;
       $('appView').hidden = true;
@@ -1343,73 +1335,11 @@
       $('loginBtn').disabled = true;
       $('loginErr').textContent = '';
       state.key = key;
-      state.demo = false;
       await load();
       $('loginBtn').disabled = false;
     });
-    $('demoBtn').addEventListener('click', () => { state.demo = true; load(); });
     $('logoutBtn').addEventListener('click', logout);
     $('refreshBtn').addEventListener('click', load);
-
-    /* ============ 샘플 데이터 (배포 전 미리보기용) ============ */
-    function makeDemo() {
-      const pages = Object.keys(APPS);
-      const weight = { store: 10, counter: 6, pomodoro: 4, timer: 3, gpa: 3, todo: 3.5, dday: 2.5, age: 2, checkhere: 5, contact: 1, workshop: 1.5 };
-      const today = kstToday();
-      const start = addDays(today, -119);
-      let seed = 7;
-      const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-      const pick = (o) => { let r = rnd() * Object.values(o).reduce((a, b) => a + b, 0); for (const [k, w] of Object.entries(o)) { if ((r -= w) <= 0) return k; } return Object.keys(o)[0]; };
-      const buckets = {};
-      const recent = [];
-      let vidN = 0;
-      const seen = new Set();
-      dateList(start, today).forEach((d, di) => {
-        const wdBoost = [0.6, 1.1, 1.15, 1.1, 1.05, 0.9, 0.55][weekday(d)];
-        const base = (14 + di * 0.25) * wdBoost * (0.8 + rnd() * 0.4);
-        for (let k = 0; k < base; k++) {
-          const returning = rnd() < 0.45 && vidN > 0;
-          const vid = returning ? Math.floor(rnd() * vidN) : vidN++;
-          const isNew = !seen.has(vid); seen.add(vid);
-          const views = 1 + Math.floor(rnd() * 3);
-          const dev = pick({ mobile: 6, desktop: 3.5, tablet: 0.5 });
-          const ref = pick({ '(direct)': 5, 'google.com': 2, 'naver.com': 2.5, 'instagram.com': 1, 'kakao.com': 1.5, 'github.com': 0.5 });
-          const br = dev === 'desktop' ? pick({ Chrome: 6, Edge: 2, Safari: 2, Firefox: 0.5 }) : pick({ Safari: 4, Chrome: 3, Samsung: 1.5, KakaoTalk: 1, 'Naver/Whale': 1 });
-          const os = dev === 'desktop' ? pick({ Windows: 6, macOS: 3.5, Linux: 0.3 }) : pick({ iOS: 5, Android: 4 });
-          const place = pick({ 'KR|Seoul': 5, 'KR|Seongnam-si': 2, 'KR|Incheon': 1, 'KR|Busan': 1, 'KR|Daejeon': 0.6, 'KR|': 0.4, 'US|San Jose': 0.2, 'JP|Tokyo': 0.2, unknown: 0.6 });
-          const [ctry, city] = place === 'unknown' ? ['', ''] : place.split('|');
-          const hour = Math.min(23, Math.max(0, Math.round(14 + (rnd() + rnd() + rnd() - 1.5) * 9)));
-          for (let v = 0; v < views; v++) {
-            const p = v === 0 && rnd() < 0.5 ? 'store' : pick(weight);
-            const id = d + '|' + p;
-            const b = buckets[id] || (buckets[id] = { d, p, v: 0, n: 0, h: {}, dev: {}, br: {}, os: {}, ref: {}, lang: {}, ctry: {}, city: {}, vs: [] });
-            b.v++;
-            if (isNew && v === 0) b.n++;
-            b.h[hour] = (b.h[hour] || 0) + 1;
-            b.dev[dev] = (b.dev[dev] || 0) + 1;
-            b.br[br] = (b.br[br] || 0) + 1;
-            b.os[os] = (b.os[os] || 0) + 1;
-            b.ref[ref] = (b.ref[ref] || 0) + 1;
-            const lang = rnd() < 0.92 ? 'ko-KR' : 'en-US';
-            b.lang[lang] = (b.lang[lang] || 0) + 1;
-            const ck = ctry || 'unknown';
-            const cityKey = ctry && city ? ctry + '|' + city : 'unknown';
-            b.ctry[ck] = (b.ctry[ck] || 0) + 1;
-            b.city[cityKey] = (b.city[cityKey] || 0) + 1;
-            if (!b.vs.includes(vid)) b.vs.push(vid);
-            if (di > 116) recent.push({ t: new Date(d + `T${String(hour).padStart(2, '0')}:${String(Math.floor(rnd() * 60)).padStart(2, '0')}:00+09:00`).getTime(), p, vid: 'demo' + vid.toString(36).padStart(4, '0'), n: isNew && v === 0, dev, br, os, ref: ref === '(direct)' ? '' : ref, lang, ctry, city });
-          }
-        }
-      });
-      const list = Object.values(buckets);
-      const cumulative = {};
-      pages.forEach((p) => { cumulative[p] = 800 + list.filter((b) => b.p === p).reduce((s, b) => s + b.v, 0); });
-      recent.sort((a, b) => b.t - a.t);
-      return {
-        ok: true, pages, today, firstDate: start, totalEvents: list.reduce((s, b) => s + b.v, 0),
-        cumulative, buckets: list, recent: recent.slice(0, 200), sheetUrl: '',
-      };
-    }
 
     /* ============ 시작 ============ */
     // 비밀번호는 저장하지 않습니다. 관리자 화면을 열 때마다 새로 입력해야 합니다.
