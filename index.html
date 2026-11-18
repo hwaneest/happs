@@ -656,6 +656,24 @@
     .contact-submit:disabled { opacity: 0.5; cursor: progress; }
 
     /* ===== 본부 워크샵 설문 ===== */
+    .ws-lock { max-width: 420px; }
+    .ws-lock-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      box-shadow: var(--shadow); padding: 28px 24px; margin-top: 8px; text-align: center;
+    }
+    .ws-lock-card .icon { font-size: 34px; line-height: 1; }
+    .ws-lock-card h1 { font-size: 20px; margin: 12px 0 6px; letter-spacing: -0.01em; }
+    .ws-lock-card p { font-size: 14px; color: var(--muted); margin: 0 0 18px; word-break: keep-all; }
+    .ws-lock-card input {
+      width: 100%; font-family: inherit; font-size: 18px; letter-spacing: 0.3em; text-align: center;
+      color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px; outline: none;
+    }
+    .ws-lock-card input::placeholder { letter-spacing: normal; font-size: 15px; }
+    .ws-lock-card input:focus { border-color: var(--text); }
+    .ws-lock-card input.invalid { border-color: #e5484d; }
+    .ws-lock-err { color: #e5484d; font-size: 13px; min-height: 18px; margin-top: 8px; }
+    .ws-lock-card .contact-submit { margin-top: 10px; }
     .ws { max-width: 760px; }
     .ws-tag {
       display: inline-block; font-size: 12px; font-weight: 700; color: #e5484d;
@@ -1479,6 +1497,25 @@
       </div>
     </section>
 
+    <!-- ============ 본부 워크샵 설문: 비밀번호 화면 ============ -->
+    <section id="view-workshop-lock" class="ws-lock" hidden>
+      <button class="back" data-nav="#store">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        앱 목록
+      </button>
+      <form class="ws-lock-card" id="wsLockForm" novalidate>
+        <div class="icon">🔒</div>
+        <h1>본부 워크샵 설문</h1>
+        <p>비밀번호를 입력해야 열 수 있습니다.</p>
+        <input type="password" id="wsLockInput" inputmode="numeric" autocomplete="off" placeholder="비밀번호" aria-label="비밀번호" />
+        <div class="ws-lock-err" id="wsLockErr" role="alert"></div>
+        <button type="submit" class="contact-submit">열기</button>
+      </form>
+    </section>
+
     <!-- ============ 본부 워크샵 설문 APP VIEW ============ -->
     <section id="view-workshop" class="ws" hidden>
       <button class="back" data-nav="#store">
@@ -1633,17 +1670,56 @@
       checkhere: document.getElementById('view-checkhere'),
       contact: document.getElementById('view-contact'),
       workshop: document.getElementById('view-workshop'),
+      'workshop-lock': document.getElementById('view-workshop-lock'),
     };
+
+    /* 본부 워크샵 설문은 비밀번호를 맞혀야 열립니다 (홈에서 눌러도, #workshop 링크로 바로 와도).
+       비밀번호 원문 대신 SHA-256 해시만 둡니다. 바꾸려면 터미널에서
+       printf 'happs-workshop:새비밀번호' | shasum -a 256  결과를 WS_PASS_HASH 에 넣으세요.
+       앱 화면을 떠나면 다시 잠기므로, 열 때마다 비밀번호를 묻습니다. */
+    const WS_PASS_HASH = '08e3a63583ec6b67d0dc21b58a000ecebbbac2d287f4af2192f326b117fb2800';
+    let wsUnlocked = false;
 
     function route() {
       const key = (location.hash.replace('#', '') || 'store');
-      const target = views[key] ? key : 'store';
+      let target = views[key] && key !== 'workshop-lock' ? key : 'store';
+      if (target !== 'workshop') wsUnlocked = false;
+      else if (!wsUnlocked) target = 'workshop-lock';
       Object.entries(views).forEach(([name, elm]) => {
         elm.hidden = name !== target;
       });
       window.scrollTo(0, 0);
+      if (target === 'workshop-lock') {
+        wsLockInput.value = '';
+        wsLockErr.textContent = '';
+        wsLockInput.classList.remove('invalid');
+        wsLockInput.focus();
+        return;
+      }
       countView(target);
     }
+
+    const wsLockForm = document.getElementById('wsLockForm');
+    const wsLockInput = document.getElementById('wsLockInput');
+    const wsLockErr = document.getElementById('wsLockErr');
+
+    async function wsHash(text) {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+      return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    wsLockForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const ok = (await wsHash('happs-workshop:' + wsLockInput.value.trim())) === WS_PASS_HASH;
+      if (!ok) {
+        wsLockErr.textContent = '비밀번호가 맞지 않습니다.';
+        wsLockInput.classList.add('invalid');
+        wsLockInput.select();
+        return;
+      }
+      wsUnlocked = true;
+      route();
+    });
 
     /* ============ 조회수 (페이지마다 누적, 방문할 때마다 +1) ============ */
     // Views.gs 를 Apps Script 웹앱으로 배포한 뒤 URL을 아래에 붙여넣으세요.
