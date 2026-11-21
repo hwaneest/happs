@@ -761,6 +761,118 @@
     .ws-done .big { font-size: 44px; margin-bottom: 6px; }
     .ws-done h2 { font-size: 20px; margin: 0 0 8px; }
     .ws-done p { color: var(--muted); margin: 0 0 18px; font-size: 14.5px; word-break: keep-all; }
+
+    /* ===== 지하철 혼잡도 ===== */
+    .sb {
+      --lv1: #1f9d55; --lv1-soft: #e3f5ea;
+      --lv2: #c98a00; --lv2-soft: #fdf3d6;
+      --lv3: #ef6a1f; --lv3-soft: #fde8db;
+      --lv4: #e5484d; --lv4-soft: #fde4e4;
+      --sb-on: #4f6ef7; --sb-off: #b7c3f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      .sb {
+        --lv1: #3fbf74; --lv1-soft: #173526;
+        --lv2: #e3b23c; --lv2-soft: #3a3016;
+        --lv3: #ff8a4c; --lv3-soft: #3d2516;
+        --lv4: #ff6b6f; --lv4-soft: #401d20;
+        --sb-on: #6d86ff; --sb-off: #3b4673;
+      }
+    }
+    .sb .app-header p { word-break: keep-all; }
+    .sb-loading { color: var(--muted); font-size: 14px; padding: 24px 0; }
+    .sb-lines { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .sb-lines button {
+      width: 40px; height: 40px; border-radius: 50%;
+      border: 2px solid var(--lc); background: var(--card); color: var(--lc);
+      font: 700 16px/1 inherit; font-family: inherit; cursor: pointer;
+      transition: transform 0.12s ease;
+    }
+    .sb-lines button:hover { transform: scale(1.06); }
+    .sb-lines button.on { background: var(--lc); color: #fff; }
+    .sb-pick .field { min-width: 110px; }
+    .sb-pick .sb-station { flex: 2 1 180px; }
+    .sb-nowbtn { padding: 11px 18px; }
+    .sb-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      box-shadow: var(--shadow); padding: 18px; margin-top: 16px;
+    }
+    .sb-card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: 14px; }
+    .sb-card h2 { font-size: 17px; margin: 0; letter-spacing: -0.01em; word-break: keep-all; }
+    .sb-card h2 small { font-size: 12.5px; color: var(--muted); font-weight: 500; margin-left: 4px; }
+    .sb-src { font-size: 12px; color: var(--muted); }
+    .sb-dirs { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+    .sb-dir { border-radius: 14px; padding: 14px 16px; background: var(--lvs, var(--bg)); }
+    .sb-dir .to { font-size: 13px; color: var(--muted); font-weight: 600; }
+    .sb-dir .lvrow { display: flex; align-items: baseline; gap: 10px; margin-top: 4px; }
+    .sb-dir .lv { font-size: 26px; font-weight: 800; color: var(--lvc, var(--text)); letter-spacing: -0.02em; }
+    .sb-dir .pct { font-size: 16px; font-weight: 700; color: var(--lvc, var(--text)); font-variant-numeric: tabular-nums; }
+    .sb-dir .desc { font-size: 13.5px; margin-top: 2px; word-break: keep-all; }
+    .sb-dir .tip { font-size: 13px; color: var(--muted); margin-top: 8px; word-break: keep-all; }
+    .sb-dir .tip b { color: var(--text); }
+    .lv-1 { --lvc: var(--lv1); --lvs: var(--lv1-soft); }
+    .lv-2 { --lvc: var(--lv2); --lvs: var(--lv2-soft); }
+    .lv-3 { --lvc: var(--lv3); --lvs: var(--lv3-soft); }
+    .lv-4 { --lvc: var(--lv4); --lvs: var(--lv4-soft); }
+    .sb-note { font-size: 13px; color: var(--muted); margin: 12px 0 0; word-break: keep-all; }
+    .sb-seg { display: inline-flex; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 3px; gap: 2px; }
+    .sb-seg button {
+      border: none; background: none; color: var(--muted); font-family: inherit; font-size: 13px; font-weight: 600;
+      padding: 5px 10px; border-radius: 7px; cursor: pointer; white-space: nowrap;
+    }
+    .sb-seg button.on { background: var(--card); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+    .sb-chart { position: relative; height: 150px; display: flex; align-items: flex-end; gap: 2px; border-bottom: 1px solid var(--border); }
+    .sb-chart .ref { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--border); pointer-events: none; }
+    .sb-chart .ref { z-index: 2; }
+    .sb-chart .ref span { position: absolute; right: 0; top: -17px; font-size: 11px; color: var(--muted); background: var(--card); padding: 0 2px; }
+    .sb-chart .bar {
+      flex: 1; min-width: 0; border-radius: 3px 3px 0 0; background: var(--lvc); opacity: 0.55;
+      cursor: pointer; border: none; padding: 0; position: relative; z-index: 1;
+    }
+    .sb-chart .bar:hover { opacity: 0.8; }
+    .sb-chart .bar.sel { opacity: 1; box-shadow: 0 0 0 2px var(--card), 0 0 0 3.5px var(--lvc); }
+    .sb-chart-board { gap: 3px; }
+    .sb-chart-board .pair { flex: 1; min-width: 0; height: 100%; display: flex; align-items: flex-end; gap: 1px; cursor: pointer; position: relative; z-index: 1; border-radius: 3px; }
+    .sb-chart-board .pair i { flex: 1; border-radius: 2px 2px 0 0; background: var(--sb-on); }
+    .sb-chart-board .pair i.off { background: var(--sb-off); }
+    .sb-chart-board .pair:not(.sel) { opacity: 0.6; }
+    .sb-chart-board .pair:hover { opacity: 0.85; }
+    .sb-chart-board .pair.sel { opacity: 1; background: var(--accent-soft); }
+    .sb-axis { position: relative; height: 18px; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .sb-axis span { position: absolute; top: 2px; transform: translateX(-50%); white-space: nowrap; }
+    .sb-axis span:last-child { transform: translateX(-75%); }
+    .sb-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); margin: 10px 0 0; }
+    .sb-legend span { display: inline-flex; align-items: center; gap: 5px; }
+    .sb-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+    .sb-legend i.lv1 { background: var(--lv1); } .sb-legend i.lv2 { background: var(--lv2); }
+    .sb-legend i.lv3 { background: var(--lv3); } .sb-legend i.lv4 { background: var(--lv4); }
+    .sb-legend i.on { background: var(--sb-on); } .sb-legend i.off { background: var(--sb-off); }
+    .sb-legend .sb-legend-tip { margin-left: auto; }
+    .sb-rank { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .sb-rank h3 { font-size: 13px; color: var(--muted); margin: 0 0 6px; }
+    .sb-rank ol { margin: 0; padding: 0; list-style: none; counter-reset: r; }
+    .sb-rank li { counter-increment: r; }
+    .sb-rank li button {
+      width: 100%; display: flex; align-items: center; gap: 8px; text-align: left;
+      border: none; background: none; color: var(--text); font-family: inherit; font-size: 14px;
+      padding: 7px 4px; border-bottom: 1px solid var(--border); cursor: pointer;
+    }
+    .sb-rank li:last-child button { border-bottom: none; }
+    .sb-rank li button::before { content: counter(r); width: 18px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+    .sb-rank li button:hover .nm { color: var(--accent); }
+    .sb-rank .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sb-rank .val { font-weight: 700; color: var(--lvc); font-variant-numeric: tabular-nums; font-size: 13px; white-space: nowrap; }
+    .sb-about summary { cursor: pointer; font-weight: 700; font-size: 15px; }
+    .sb-about p { font-size: 13.5px; color: var(--muted); margin: 10px 0 0; word-break: keep-all; line-height: 1.7; }
+    .sb-about p b { color: var(--text); }
+    .sb footer { word-break: keep-all; line-height: 1.7; }
+    .sb footer a { color: inherit; }
+    @media (max-width: 640px) {
+      .sb-rank { grid-template-columns: 1fr; gap: 8px; }
+      .sb-legend .sb-legend-tip { margin-left: 0; width: 100%; }
+      .sb-chart { height: 130px; gap: 1px; }
+      .sb-chart-board { gap: 2px; }
+    }
   </style>
 </head>
 <body>
@@ -948,6 +1060,22 @@
           <div class="app-action">
             <span class="pill">열기</span>
             <span class="card-views" data-card-views="workshop">조회수 <strong>–</strong></span>
+          </div>
+        </a>
+
+        <a class="app available" href="#subway"
+           data-name="지하철 혼잡도 subway 지옥철 출근 퇴근 출퇴근 혼잡 사람 많은 역 서울 1호선 2호선 3호선 4호선 5호선 6호선 7호선 8호선 9호선 교통">
+          <div class="app-top">
+            <div class="app-icon" style="background:#e8f4ec;">🚇</div>
+            <div>
+              <p class="app-name">지하철 혼잡도</p>
+              <div class="app-cat">교통</div>
+            </div>
+          </div>
+          <p class="app-desc">서울 1~9호선 역·시간대별로 열차가 얼마나 붐비는지 공공데이터 통계로 알려 드립니다.</p>
+          <div class="app-action">
+            <span class="pill">열기</span>
+            <span class="card-views" data-card-views="subway">조회수 <strong>–</strong></span>
           </div>
         </a>
 
@@ -1611,6 +1739,105 @@
         <button type="button" class="tool" id="wsAgain">다시 작성하기</button>
       </div>
     </section>
+
+    <!-- ============ 지하철 혼잡도 APP VIEW ============ -->
+    <section id="view-subway" class="sb" hidden>
+      <button class="back" data-nav="#store">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        앱 목록
+      </button>
+
+      <header class="app-header">
+        <h1>지하철 혼잡도</h1>
+        <p>타려는 역과 시간을 고르면, 그 시간에 열차가 얼마나 붐비는지 공공데이터 통계로 알려 드립니다. 🚇</p>
+        <div class="views" data-views="subway">조회수 <strong>–</strong></div>
+      </header>
+
+      <div class="sb-loading" id="sbLoading">혼잡도 자료를 불러오는 중…</div>
+
+      <div id="sbApp" hidden>
+        <div class="editor-card">
+          <div class="sb-lines" id="sbLines" role="tablist" aria-label="호선"></div>
+          <div class="field-row sb-pick">
+            <div class="field sb-station">
+              <label for="sbStation">역</label>
+              <select id="sbStation"></select>
+            </div>
+            <div class="field">
+              <label for="sbDay">요일</label>
+              <select id="sbDay">
+                <option value="w">평일</option>
+                <option value="s">토요일</option>
+                <option value="h">일요일·공휴일</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="sbSlot">탈 시각</label>
+              <select id="sbSlot"></select>
+            </div>
+            <button type="button" class="tool primary sb-nowbtn" id="sbNow">지금</button>
+          </div>
+        </div>
+
+        <div class="sb-card">
+          <div class="sb-card-head">
+            <h2 id="sbTitle">–</h2>
+            <span class="sb-src" id="sbSrc"></span>
+          </div>
+          <div class="sb-dirs" id="sbDirs"></div>
+          <p class="sb-note" id="sbNote" hidden></p>
+        </div>
+
+        <div class="sb-card" id="sbChartCard">
+          <div class="sb-card-head">
+            <h2 id="sbChartTitle">하루 혼잡도 흐름</h2>
+            <div class="sb-seg" id="sbDirTabs"></div>
+          </div>
+          <div class="sb-chart" id="sbChart"></div>
+          <div class="sb-axis" id="sbAxis"></div>
+          <p class="sb-legend">
+            <span><i class="lv1"></i>여유</span><span><i class="lv2"></i>보통</span><span><i class="lv3"></i>붐빔</span><span><i class="lv4"></i>매우 혼잡</span>
+            <span class="sb-legend-tip" id="sbChartTip">막대를 누르면 그 시각으로 바뀝니다</span>
+          </p>
+        </div>
+
+        <div class="sb-card" id="sbBoardCard">
+          <div class="sb-card-head">
+            <h2>시간대별 승하차 인원 <small>하루 평균</small></h2>
+          </div>
+          <div class="sb-chart sb-chart-board" id="sbBoard"></div>
+          <div class="sb-axis" id="sbBoardAxis"></div>
+          <p class="sb-legend"><span><i class="on"></i>타는 사람</span><span><i class="off"></i>내리는 사람</span><span class="sb-legend-tip" id="sbBoardTip"></span></p>
+        </div>
+
+        <div class="sb-card">
+          <div class="sb-card-head">
+            <h2 id="sbRankTitle">이 시각 붐비는 역 · 한산한 역</h2>
+            <div class="sb-seg" id="sbRankTabs">
+              <button type="button" data-rank="c" class="on">열차 혼잡도</button>
+              <button type="button" data-rank="b">역 승하차</button>
+            </div>
+          </div>
+          <div class="sb-rank">
+            <div><h3>붐비는 역</h3><ol id="sbRankHi"></ol></div>
+            <div><h3>한산한 역</h3><ol id="sbRankLo"></ol></div>
+          </div>
+          <p class="sb-note" id="sbRankNote" hidden></p>
+        </div>
+
+        <details class="sb-card sb-about">
+          <summary>실시간 혼잡도는 볼 수 없나요?</summary>
+          <p>공공데이터포털·서울 열린데이터광장에 무료로 열려 있는 지하철 자료는 <b>통계</b>(30분 단위 평균 혼잡도, 시간대별 승하차 인원)와 <b>실시간 열차 도착 정보</b>뿐입니다. 열차 칸의 실시간 혼잡도는 서울교통공사 ‘또타지하철’ 앱(2·3호선은 실시간, 나머지 호선은 통신 자료로 만든 예측)이나 지도 앱에서 볼 수 있지만, 누구나 쓸 수 있는 무료 공개 API로는 열려 있지 않습니다.</p>
+          <p>그래서 이 앱은 <b>같은 요일·같은 시각의 평균</b>을 보여 줍니다. 출퇴근길처럼 매일 반복되는 혼잡은 잘 맞지만, 행사·폭우·파업·열차 지연 같은 그날의 일은 반영되지 않아요.</p>
+          <p><b>혼잡도 읽는 법</b> · 34%는 좌석이 모두 찬 정도, 100%는 한 칸 정원(160명)이 탄 정도입니다. 이 앱은 35% 미만을 ‘여유’, 70% 미만을 ‘보통’, 100% 미만을 ‘붐빔’, 그 이상을 ‘매우 혼잡’으로 나눕니다. 9호선과 코레일 구간(1·3·4호선 일부)은 혼잡도 자료가 없어, 그 역을 오가는 사람 수가 전체 역 가운데 어느 정도인지로 ‘역 붐빔’을 대신 보여 줍니다.</p>
+        </details>
+
+        <footer id="sbFooter"></footer>
+      </div>
+    </section>
   </div>
 
   <!-- ============ CHECKHERE POPUP ============ -->
@@ -1670,6 +1897,7 @@
       checkhere: document.getElementById('view-checkhere'),
       contact: document.getElementById('view-contact'),
       workshop: document.getElementById('view-workshop'),
+      subway: document.getElementById('view-subway'),
       'workshop-lock': document.getElementById('view-workshop-lock'),
     };
 
@@ -1697,6 +1925,7 @@
         return;
       }
       countView(target);
+      if (target === 'subway') sbOpen();
     }
 
     const wsLockForm = document.getElementById('wsLockForm');
@@ -3283,6 +3512,299 @@
 
     wsLoad();
     wsRender();
+
+    /* ============ 지하철 혼잡도 ============ */
+    // 자료: data/subway.json (scripts/build-subway-data.py 로 만듭니다)
+    //  - 1~8호선: 서울교통공사 30분 단위 평균 혼잡도 (평일·토·일, 방향별)
+    //  - 1~9호선: 서울시 시간대별 승하차 인원 (월 합계 ÷ 날짜 수 = 하루 평균)
+    const SB_COLORS = { 1: '#0052A4', 2: '#00A84D', 3: '#EF7C1C', 4: '#00A5DE', 5: '#996CAC', 6: '#CD7C2F', 7: '#747F00', 8: '#E6186C', 9: '#BDB092' };
+    const SB_DIRS = {
+      1: { 상선: '청량리·의정부 방면', 하선: '서울역·인천·천안 방면' },
+      2: { 내선: '내선순환 (시계 방향)', 외선: '외선순환 (반시계 방향)' },
+      3: { 상선: '대화 방면', 하선: '오금 방면' },
+      4: { 상선: '당고개·진접 방면', 하선: '사당·오이도 방면' },
+      5: { 상선: '방화 방면', 하선: '하남검단산·마천 방면' },
+      6: { 상선: '응암 방면', 하선: '신내 방면' },
+      7: { 상선: '장암 방면', 하선: '석남 방면' },
+      8: { 상선: '별내·암사 방면', 하선: '모란 방면' },
+    };
+    const SB_DAYS = { w: '평일', s: '토요일', h: '일요일·공휴일' };
+    const SB_LEVELS = [
+      null,
+      { name: '여유', c: '앉아 갈 수도 있어요', b: '역을 오가는 사람이 적은 편이에요' },
+      { name: '보통', c: '서서 가도 여유가 있어요', b: '역 이용객이 보통 수준이에요' },
+      { name: '붐빔', c: '서 있는 사람끼리 어깨가 닿을 만큼 붐벼요', b: '역에 사람이 많은 편이에요' },
+      { name: '매우 혼잡', c: '정원을 넘을 만큼 매우 붐벼요', b: '역이 아주 붐비는 시간이에요' },
+    ];
+    const sbLevelC = (v) => (v < 35 ? 1 : v < 70 ? 2 : v < 100 ? 3 : 4);
+
+    const sb = { data: null, loading: null, line: '2', station: '', day: 'w', slot: 0, dir: '', rank: 'c', bq: null };
+    const sbEl = (id) => document.getElementById(id);
+    const sbEsc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const sbFmtSlot = (s) => { const [h, m] = s.split(':').map(Number); return String(h % 24).padStart(2, '0') + ':' + String(m).padStart(2, '0'); };
+    const sbSlotHour = (i) => Number(sb.data.meta.slots[i].split(':')[0]) % 24;
+
+    function sbSave() {
+      try { localStorage.setItem('happs_subway', JSON.stringify({ line: sb.line, station: sb.station })); } catch (e) {}
+    }
+
+    function sbOpen() {
+      if (sb.data) { sbRender(); return; }
+      if (sb.loading) return;
+      sb.loading = fetch('data/subway.json', { cache: 'no-cache' })
+        .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then((d) => { sb.data = d; sbSetup(); })
+        .catch(() => {
+          sb.loading = null;
+          sbEl('sbLoading').textContent = '혼잡도 자료를 불러오지 못했습니다. 인터넷 연결을 확인하고 다시 열어 주세요.';
+        });
+    }
+
+    // 승하차 인원(타는+내리는 사람)이 전체 역·시간대 가운데 어느 정도인지로 '역 붐빔' 단계를 정합니다.
+    function sbBoardQuantiles() {
+      const all = [];
+      Object.values(sb.data.lines).forEach((sts) => sts.forEach((s) => {
+        if (!s.on) return;
+        for (let h = 5; h < 24; h++) all.push(s.on[h] + s.off[h]);
+      }));
+      all.sort((a, b) => a - b);
+      const q = (p) => all[Math.floor(all.length * p)];
+      return [q(0.5), q(0.8), q(0.95)];
+    }
+    const sbLevelB = (v) => (v < sb.bq[0] ? 1 : v < sb.bq[1] ? 2 : v < sb.bq[2] ? 3 : 4);
+
+    function sbNowPick() {
+      const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Seoul', weekday: 'short', hour: 'numeric', minute: 'numeric', hourCycle: 'h23',
+      }).formatToParts(new Date()).map((p) => [p.type, p.value]));
+      let mins = Number(parts.hour) * 60 + Number(parts.minute);
+      let wd = parts.weekday;
+      // 자정 넘어 새벽 1시 전까지는 전날 막차 시간대로 봅니다.
+      if (mins < 60) { mins += 24 * 60; wd = { Sun: 'Sat', Mon: 'Sun', Tue: 'Mon', Wed: 'Tue', Thu: 'Wed', Fri: 'Thu', Sat: 'Fri' }[wd]; }
+      sb.day = wd === 'Sat' ? 's' : wd === 'Sun' ? 'h' : 'w';
+      const slots = sb.data.meta.slots.map((s) => { const [h, m] = s.split(':').map(Number); return h * 60 + m; });
+      let idx = slots.findIndex((t, i) => mins >= t && mins < (slots[i + 1] ?? t + 30));
+      sb.outOfService = idx < 0;
+      if (idx < 0) idx = 0;
+      sb.slot = idx;
+    }
+
+    function sbSetup() {
+      const d = sb.data;
+      sb.bq = sbBoardQuantiles();
+      try {
+        const saved = JSON.parse(localStorage.getItem('happs_subway') || 'null');
+        if (saved && d.lines[saved.line]) { sb.line = saved.line; sb.station = saved.station; }
+      } catch (e) {}
+
+      sbEl('sbLines').innerHTML = Object.keys(d.lines).map((ln) =>
+        `<button type="button" role="tab" data-line="${ln}" style="--lc:${SB_COLORS[ln]}" aria-label="${ln}호선">${ln}</button>`).join('');
+      sbEl('sbLines').addEventListener('click', (e) => {
+        const b = e.target.closest('[data-line]');
+        if (!b) return;
+        sb.line = b.dataset.line; sb.station = ''; sb.dir = '';
+        sbSave(); sbRender();
+      });
+      sbEl('sbSlot').innerHTML = d.meta.slots.map((s, i) => `<option value="${i}">${sbFmtSlot(s)}</option>`).join('');
+      sbEl('sbStation').addEventListener('change', (e) => { sb.station = e.target.value; sb.dir = ''; sbSave(); sbRender(); });
+      sbEl('sbDay').addEventListener('change', (e) => { sb.day = e.target.value; sb.outOfService = false; sbRender(); });
+      sbEl('sbSlot').addEventListener('change', (e) => { sb.slot = Number(e.target.value); sb.outOfService = false; sbRender(); });
+      sbEl('sbNow').addEventListener('click', () => { sbNowPick(); sbRender(); });
+      sbEl('sbDirTabs').addEventListener('click', (e) => {
+        const b = e.target.closest('[data-dir]');
+        if (b) { sb.dir = b.dataset.dir; sbRender(); }
+      });
+      sbEl('sbRankTabs').addEventListener('click', (e) => {
+        const b = e.target.closest('[data-rank]');
+        if (b) { sb.rank = b.dataset.rank; sbRender(); }
+      });
+      const pickSlot = (e) => {
+        const b = e.target.closest('[data-slot]');
+        if (b) { sb.slot = Number(b.dataset.slot); sb.outOfService = false; sbRender(); }
+      };
+      sbEl('sbChart').addEventListener('click', pickSlot);
+      sbEl('sbBoard').addEventListener('click', (e) => {
+        const b = e.target.closest('[data-hour]');
+        if (!b) return;
+        const h = Number(b.dataset.hour);
+        const i = d.meta.slots.findIndex((s) => Number(s.split(':')[0]) % 24 === h);
+        if (i >= 0) { sb.slot = i; sb.outOfService = false; sbRender(); }
+      });
+      document.querySelectorAll('.sb-rank ol').forEach((ol) => ol.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-st]');
+        if (b) { sb.station = b.dataset.st; sb.dir = ''; sbSave(); sbRender(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+      }));
+
+      const ym = d.meta.boarding.split('-');
+      sbEl('sbFooter').innerHTML =
+        `자료: 서울교통공사 지하철 혼잡도 정보(${d.meta.congestion.slice(0, 7).replace('-', '년 ')}월 말 기준, 1~8호선 30분 단위 평균) · ` +
+        `서울시 지하철 호선별 역별 시간대별 승하차 인원(${ym[0]}년 ${Number(ym[1])}월, 교통카드 기준) — ` +
+        `<a href="https://data.seoul.go.kr/dataList/OA-12928/S/1/datasetView.do" target="_blank" rel="noopener">서울 열린데이터광장</a>, ` +
+        `<a href="https://www.data.go.kr/data/15071311/fileData.do" target="_blank" rel="noopener">공공데이터포털</a>`;
+
+      sbNowPick();
+      sbEl('sbLoading').hidden = true;
+      sbEl('sbApp').hidden = false;
+      sbRender();
+    }
+
+    function sbStations() { return sb.data.lines[sb.line]; }
+    // 방향 이름. 2호선 본선(201~243)은 바로 다음 역으로 알려 줍니다: 내선은 번호가 커지는 쪽(시계 방향).
+    function sbDirLabel(st, dr, short) {
+      if (sb.line === '2' && st.no >= 201 && st.no <= 243) {
+        const step = dr === '내선' ? 1 : -1;
+        const nextNo = ((st.no - 201 + step + 43) % 43) + 201;
+        const next = sbStations().find((s) => s.no === nextNo);
+        if (next) return short ? `${dr} · ${next.n} 방면` : `${dr}순환 · ${next.n} 방면`;
+      }
+      const full = SB_DIRS[sb.line]?.[dr] || dr;
+      return short ? full.replace(/ \(.*\)$/, '') : full;
+    }
+    function sbCurrent() {
+      const sts = sbStations();
+      return sts.find((s) => s.n === sb.station) || sts.find((s) => s.c) || sts[0];
+    }
+
+    function sbRender() {
+      const d = sb.data;
+      if (!d) return;
+      const st = sbCurrent();
+      sb.station = st.n;
+      const slotLabel = sbFmtSlot(d.meta.slots[sb.slot]);
+      const hour = sbSlotHour(sb.slot);
+
+      // 호선 버튼·역 목록
+      sbEl('sbLines').querySelectorAll('button').forEach((b) => {
+        const on = b.dataset.line === sb.line;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-selected', on);
+      });
+      const sts = sbStations();
+      const main = sts.filter((s) => !s.k), kor = sts.filter((s) => s.k);
+      const opt = (s) => `<option value="${sbEsc(s.n)}"${s.n === st.n ? ' selected' : ''}>${sbEsc(s.n)}${s.c ? '' : ' ·승하차만'}</option>`;
+      sbEl('sbStation').innerHTML = kor.length
+        ? `<optgroup label="${sb.line}호선 서울교통공사 구간">${main.map(opt).join('')}</optgroup><optgroup label="${sb.line}호선 코레일 구간 (승하차 자료만)">${kor.map(opt).join('')}</optgroup>`
+        : main.map(opt).join('');
+      sbEl('sbDay').value = sb.day;
+      sbEl('sbSlot').value = sb.slot;
+
+      // 요약 카드
+      sbEl('sbTitle').textContent = `${st.n}역 · ${SB_DAYS[sb.day]} ${slotLabel} 무렵`;
+      const dirs = st.c ? Object.keys(st.c) : [];
+      if (!dirs.includes(sb.dir)) sb.dir = dirs[0] || '';
+      let html = '';
+      if (dirs.length) {
+        sbEl('sbSrc').textContent = '열차 혼잡도 · 같은 요일·시각 평균';
+        html = dirs.map((dr) => {
+          const arr = st.c[dr][sb.day];
+          const v = arr[sb.slot];
+          const lv = sbLevelC(v);
+          // 앞뒤 1시간 안에서 더 한산한 시각
+          let best = sb.slot;
+          for (let i = Math.max(0, sb.slot - 2); i <= Math.min(arr.length - 1, sb.slot + 2); i++) if (arr[i] < arr[best]) best = i;
+          const tip = best !== sb.slot && arr[sb.slot] - arr[best] >= 10
+            ? `<div class="tip">💡 <b>${sbFmtSlot(d.meta.slots[best])}</b>에 타면 약 ${arr[best]}%로 덜 붐벼요</div>`
+            : '';
+          return `<div class="sb-dir lv-${lv}">
+            <div class="to">${sbEsc(sbDirLabel(st, dr))}</div>
+            <div class="lvrow"><span class="lv">${SB_LEVELS[lv].name}</span><span class="pct">${v}%</span></div>
+            <div class="desc">${SB_LEVELS[lv].c}</div>${tip}</div>`;
+        }).join('');
+      } else if (st.on) {
+        sbEl('sbSrc').textContent = '역 승하차 인원 기준 · 하루 평균';
+        const tot = st.on[hour] + st.off[hour];
+        const lv = sbLevelB(tot);
+        html = `<div class="sb-dir lv-${lv}">
+          <div class="to">역 붐빔 (${String(hour).padStart(2, '0')}시대, 요일 구분 없음)</div>
+          <div class="lvrow"><span class="lv">${SB_LEVELS[lv].name}</span><span class="pct">${tot.toLocaleString('ko-KR')}명</span></div>
+          <div class="desc">${SB_LEVELS[lv].b} · 타는 사람 ${st.on[hour].toLocaleString('ko-KR')}명, 내리는 사람 ${st.off[hour].toLocaleString('ko-KR')}명 (한 시간)</div></div>`;
+      }
+      sbEl('sbDirs').innerHTML = html;
+      const notes = [];
+      if (sb.outOfService) notes.push('지금은 운행 시간이 아니라 첫차 시간대를 보여 드려요.');
+      if (!dirs.length) notes.push(sb.line === '9'
+        ? '9호선은 공개된 혼잡도 자료가 없어, 이 역을 오가는 사람 수로 붐비는 정도를 가늠합니다. 9호선 급행은 출근 시간에 특히 붐벼요.'
+        : '이 역은 혼잡도 자료가 없는 구간이라, 역을 오가는 사람 수로 붐비는 정도를 가늠합니다.');
+      if (sb.day !== 'w' && !dirs.length) notes.push('승하차 자료는 한 달 평균이라 요일을 바꿔도 같은 값이에요.');
+      sbEl('sbNote').hidden = !notes.length;
+      sbEl('sbNote').textContent = notes.join(' ');
+
+      // 하루 혼잡도 흐름
+      const chartCard = sbEl('sbChartCard');
+      chartCard.hidden = !dirs.length;
+      if (dirs.length) {
+        sbEl('sbDirTabs').innerHTML = dirs.map((dr) =>
+          `<button type="button" data-dir="${sbEsc(dr)}" class="${dr === sb.dir ? 'on' : ''}">${sbEsc(sbDirLabel(st, dr, true))}</button>`).join('');
+        const arr = st.c[sb.dir][sb.day];
+        const top = Math.max(150, ...arr);
+        const refs = [[34, '좌석 34%'], [100, '정원 100%']].map(([v, t]) =>
+          `<div class="ref" style="bottom:${(v / top) * 100}%"><span>${t}</span></div>`).join('');
+        sbEl('sbChart').innerHTML = refs + arr.map((v, i) =>
+          `<button type="button" class="bar lv-${sbLevelC(v)}${i === sb.slot ? ' sel' : ''}" data-slot="${i}" style="height:${Math.max(1.5, (v / top) * 100)}%" title="${sbFmtSlot(d.meta.slots[i])} · ${v}%" aria-label="${sbFmtSlot(d.meta.slots[i])} 혼잡도 ${v}%"></button>`).join('');
+        sbAxis('sbAxis', d.meta.slots.length, (i) => {
+          const [h, m] = d.meta.slots[i].split(':').map(Number);
+          return m === 0 && h % 3 === 0 ? String(h % 24).padStart(2, '0') + '시' : '';
+        });
+      }
+
+      // 승하차
+      const boardCard = sbEl('sbBoardCard');
+      boardCard.hidden = !st.on;
+      if (st.on) {
+        const hours = [];
+        for (let h = 5; h <= 24; h++) hours.push(h % 24);
+        const top = Math.max(1, ...hours.map((h) => Math.max(st.on[h], st.off[h])));
+        sbEl('sbBoard').innerHTML = hours.map((h) =>
+          `<div class="pair${h === hour ? ' sel' : ''}" data-hour="${h}" title="${String(h).padStart(2, '0')}시대 · 타는 사람 ${st.on[h].toLocaleString('ko-KR')}명 · 내리는 사람 ${st.off[h].toLocaleString('ko-KR')}명">
+            <i style="height:${(st.on[h] / top) * 100}%"></i><i class="off" style="height:${(st.off[h] / top) * 100}%"></i></div>`).join('');
+        sbAxis('sbBoardAxis', hours.length, (i) => (hours[i] % 3 === 0 ? String(hours[i]).padStart(2, '0') + '시' : ''));
+        sbEl('sbBoardTip').textContent = `${String(hour).padStart(2, '0')}시대: 타는 사람 ${st.on[hour].toLocaleString('ko-KR')}명 · 내리는 사람 ${st.off[hour].toLocaleString('ko-KR')}명`;
+      }
+
+      sbRenderRank(hour);
+    }
+
+    function sbAxis(id, n, label) {
+      let h = '';
+      for (let i = 0; i < n; i++) {
+        const t = label(i);
+        if (t) h += `<span style="left:${((i + 0.5) / n) * 100}%">${t}</span>`;
+      }
+      sbEl(id).innerHTML = h;
+    }
+
+    function sbRenderRank(hour) {
+      const sts = sbStations();
+      const hasC = sts.some((s) => s.c);
+      if (!hasC) sb.rank = 'b';
+      document.querySelectorAll('#sbRankTabs button').forEach((b) => {
+        b.classList.toggle('on', b.dataset.rank === sb.rank);
+        b.hidden = b.dataset.rank === 'c' && !hasC;
+      });
+      let rows;
+      if (sb.rank === 'c') {
+        rows = sts.filter((s) => s.c).map((s) => {
+          const v = Math.max(...Object.values(s.c).map((x) => x[sb.day][sb.slot]));
+          return { n: s.n, v, lv: sbLevelC(v), t: v + '%' };
+        });
+      } else {
+        rows = sts.filter((s) => s.on).map((s) => {
+          const v = s.on[hour] + s.off[hour];
+          return { n: s.n, v, lv: sbLevelB(v), t: v.toLocaleString('ko-KR') + '명' };
+        });
+      }
+      rows.sort((a, b) => b.v - a.v);
+      const k = Math.min(5, Math.floor(rows.length / 2));
+      const li = (r) => `<li><button type="button" data-st="${sbEsc(r.n)}"><span class="nm">${sbEsc(r.n)}</span><span class="val lv-${r.lv}">${r.t}</span></button></li>`;
+      sbEl('sbRankHi').innerHTML = rows.slice(0, k).map(li).join('');
+      sbEl('sbRankLo').innerHTML = rows.slice(-k).reverse().map(li).join('');
+      sbEl('sbRankTitle').textContent = `${sb.line}호선 ${sbFmtSlot(sb.data.meta.slots[sb.slot])} 무렵 붐비는 역 · 한산한 역`;
+      const note = sb.rank === 'c'
+        ? `열차 혼잡도는 두 방향 중 더 붐비는 쪽 값입니다${sts.some((s) => !s.c) ? ' (혼잡도 자료가 있는 서울교통공사 구간 역만)' : ''}.`
+        : '역 승하차는 그 시간대에 이 역에서 타고 내린 사람 수(하루 평균)입니다. 요일 구분이 없어요.';
+      sbEl('sbRankNote').hidden = false;
+      sbEl('sbRankNote').textContent = note;
+    }
 
     // 초기화
     update();
