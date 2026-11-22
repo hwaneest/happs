@@ -788,6 +788,7 @@
       font: 700 16px/1 inherit; font-family: inherit; cursor: pointer;
       transition: transform 0.12s ease;
     }
+    .sb-lines button.name { width: auto; border-radius: 999px; padding: 0 12px; font-size: 13.5px; }
     .sb-lines button:hover { transform: scale(1.06); }
     .sb-lines button.on { background: var(--lc); color: #fff; }
     .sb-pick .field { min-width: 110px; }
@@ -1064,7 +1065,7 @@
         </a>
 
         <a class="app available" href="#subway"
-           data-name="지하철 혼잡도 subway 지옥철 출근 퇴근 출퇴근 혼잡 사람 많은 역 서울 1호선 2호선 3호선 4호선 5호선 6호선 7호선 8호선 9호선 교통">
+           data-name="지하철 혼잡도 subway 지옥철 출근 퇴근 출퇴근 혼잡 사람 많은 역 서울 1호선 2호선 3호선 4호선 5호선 6호선 7호선 8호선 9호선 수인분당선 분당선 수인선 경의중앙선 공항철도 경춘선 경강선 우이신설선 신림선 교통">
           <div class="app-top">
             <div class="app-icon" style="background:#e8f4ec;">🚇</div>
             <div>
@@ -1072,7 +1073,7 @@
               <div class="app-cat">교통</div>
             </div>
           </div>
-          <p class="app-desc">서울 1~9호선 역·시간대별로 열차가 얼마나 붐비는지 공공데이터 통계로 알려 드립니다.</p>
+          <p class="app-desc">서울 1~9호선과 수인분당·경의중앙선 등 수도권 노선의 역·시간대별 혼잡도를 공공데이터 통계로 알려 드립니다.</p>
           <div class="app-action">
             <span class="pill">열기</span>
             <span class="card-views" data-card-views="subway">조회수 <strong>–</strong></span>
@@ -1832,7 +1833,7 @@
           <summary>실시간 혼잡도는 볼 수 없나요?</summary>
           <p>공공데이터포털·서울 열린데이터광장에 무료로 열려 있는 지하철 자료는 <b>통계</b>(30분 단위 평균 혼잡도, 시간대별 승하차 인원)와 <b>실시간 열차 도착 정보</b>뿐입니다. 열차 칸의 실시간 혼잡도는 서울교통공사 ‘또타지하철’ 앱(2·3호선은 실시간, 나머지 호선은 통신 자료로 만든 예측)이나 지도 앱에서 볼 수 있지만, 누구나 쓸 수 있는 무료 공개 API로는 열려 있지 않습니다.</p>
           <p>그래서 이 앱은 <b>같은 요일·같은 시각의 평균</b>을 보여 줍니다. 출퇴근길처럼 매일 반복되는 혼잡은 잘 맞지만, 행사·폭우·파업·열차 지연 같은 그날의 일은 반영되지 않아요.</p>
-          <p><b>혼잡도 읽는 법</b> · 34%는 좌석이 모두 찬 정도, 100%는 한 칸 정원(160명)이 탄 정도입니다. 이 앱은 35% 미만을 ‘여유’, 70% 미만을 ‘보통’, 100% 미만을 ‘붐빔’, 그 이상을 ‘매우 혼잡’으로 나눕니다. 9호선과 코레일 구간(1·3·4호선 일부)은 혼잡도 자료가 없어, 그 역을 오가는 사람 수가 전체 역 가운데 어느 정도인지로 ‘역 붐빔’을 대신 보여 줍니다.</p>
+          <p><b>혼잡도 읽는 법</b> · 34%는 좌석이 모두 찬 정도, 100%는 한 칸 정원(160명)이 탄 정도입니다. 이 앱은 35% 미만을 ‘여유’, 70% 미만을 ‘보통’, 100% 미만을 ‘붐빔’, 그 이상을 ‘매우 혼잡’으로 나눕니다. 9호선, 코레일 구간(1·3·4호선 일부), 수인분당선·경의중앙선·공항철도·경춘선·경강선·우이신설선·신림선은 혼잡도 자료가 없어, 그 역을 오가는 사람 수가 전체 역 가운데 어느 정도인지로 ‘역 붐빔’을 대신 보여 줍니다.</p>
         </details>
 
         <footer id="sbFooter"></footer>
@@ -3520,8 +3521,17 @@
     /* ============ 지하철 혼잡도 ============ */
     // 자료: data/subway.json (scripts/build-subway-data.py 로 만듭니다)
     //  - 1~8호선: 서울교통공사 30분 단위 평균 혼잡도 (평일·토·일, 방향별)
-    //  - 1~9호선: 서울시 시간대별 승하차 인원 (월 합계 ÷ 날짜 수 = 하루 평균)
-    const SB_COLORS = { 1: '#0052A4', 2: '#00A84D', 3: '#EF7C1C', 4: '#00A5DE', 5: '#996CAC', 6: '#CD7C2F', 7: '#747F00', 8: '#E6186C', 9: '#BDB092' };
+    //  - 1~9호선과 수인분당·경의중앙·공항철도·경춘·경강·우이신설·신림선: 서울시 시간대별 승하차 인원
+    //    (월 합계 ÷ 날짜 수 = 하루 평균). 신분당선은 공개 자료가 없어 빠져 있습니다.
+    const SB_COLORS = {
+      1: '#0052A4', 2: '#00A84D', 3: '#EF7C1C', 4: '#00A5DE', 5: '#996CAC', 6: '#CD7C2F', 7: '#747F00', 8: '#E6186C', 9: '#BDB092',
+      sb: '#F5A200', gj: '#77C4A3', ar: '#0090D2', gc: '#0C8E72', gg: '#003DA5', ui: '#B0CE18', sl: '#6789CA',
+    };
+    // 1~9호선 밖의 노선 (키는 scripts/build-subway-data.py 의 CARD_LINES 와 같아야 합니다)
+    const SB_LINE_NAMES = { sb: '수인분당선', gj: '경의중앙선', ar: '공항철도', gc: '경춘선', gg: '경강선', ui: '우이신설선', sl: '신림선' };
+    const sbLineName = (ln) => SB_LINE_NAMES[ln] || ln + '호선';
+    // 받침이 있으면 '은', 없으면 '는' (예: 경의중앙선은, 공항철도는)
+    const sbTopic = (w) => { const c = w.charCodeAt(w.length - 1) - 0xac00; return c >= 0 && c < 11172 && c % 28 ? '은' : '는'; };
     const SB_DIRS = {
       1: { 상선: '청량리·의정부 방면', 하선: '서울역·인천·천안 방면' },
       2: { 내선: '내선순환 (시계 방향)', 외선: '외선순환 (반시계 방향)' },
@@ -3602,7 +3612,7 @@
       } catch (e) {}
 
       sbEl('sbLines').innerHTML = Object.keys(d.lines).map((ln) =>
-        `<button type="button" role="tab" data-line="${ln}" style="--lc:${SB_COLORS[ln]}" aria-label="${ln}호선">${ln}</button>`).join('');
+        `<button type="button" role="tab" data-line="${ln}" style="--lc:${SB_COLORS[ln] || '#888'}"${SB_LINE_NAMES[ln] ? ' class="name"' : ''} aria-label="${sbLineName(ln)}">${SB_LINE_NAMES[ln] || ln}</button>`).join('');
       sbEl('sbLines').addEventListener('click', (e) => {
         const b = e.target.closest('[data-line]');
         if (!b) return;
@@ -3685,15 +3695,16 @@
       });
       const sts = sbStations();
       const main = sts.filter((s) => !s.k), kor = sts.filter((s) => s.k);
-      const opt = (s) => `<option value="${sbEsc(s.n)}"${s.n === st.n ? ' selected' : ''}>${sbEsc(s.n)}${s.c ? '' : ' ·승하차만'}</option>`;
+      const lineHasC = sts.some((s) => s.c);   // 혼잡도 자료가 아예 없는 노선은 '승하차만' 표시를 생략합니다
+      const opt = (s) => `<option value="${sbEsc(s.n)}"${s.n === st.n ? ' selected' : ''}>${sbEsc(s.n)}${s.c || !lineHasC ? '' : ' ·승하차만'}</option>`;
       sbEl('sbStation').innerHTML = kor.length
-        ? `<optgroup label="${sb.line}호선 서울교통공사 구간">${main.map(opt).join('')}</optgroup><optgroup label="${sb.line}호선 코레일 구간 (승하차 자료만)">${kor.map(opt).join('')}</optgroup>`
+        ? `<optgroup label="${sbLineName(sb.line)} 서울교통공사 구간">${main.map(opt).join('')}</optgroup><optgroup label="${sbLineName(sb.line)} 코레일 구간 (승하차 자료만)">${kor.map(opt).join('')}</optgroup>`
         : main.map(opt).join('');
       sbEl('sbDay').value = sb.day;
       sbEl('sbSlot').value = sb.slot;
 
       // 요약 카드
-      sbEl('sbTitle').textContent = `${st.n}역 · ${SB_DAYS[sb.day]} ${slotLabel} 무렵`;
+      sbEl('sbTitle').textContent = `${st.n}${st.n.endsWith('역') ? '' : '역'} · ${SB_DAYS[sb.day]} ${slotLabel} 무렵`;
       const dirs = st.c ? Object.keys(st.c) : [];
       if (!dirs.includes(sb.dir)) sb.dir = dirs[0] || '';
       let html = '';
@@ -3728,7 +3739,9 @@
       if (sb.outOfService) notes.push('지금은 운행 시간이 아니라 첫차 시간대를 보여 드려요.');
       if (!dirs.length) notes.push(sb.line === '9'
         ? '9호선은 공개된 혼잡도 자료가 없어, 이 역을 오가는 사람 수로 붐비는 정도를 가늠합니다. 9호선 급행은 출근 시간에 특히 붐벼요.'
-        : '이 역은 혼잡도 자료가 없는 구간이라, 역을 오가는 사람 수로 붐비는 정도를 가늠합니다.');
+        : !sts.some((s) => s.c)
+          ? `${sbLineName(sb.line)}${sbTopic(sbLineName(sb.line))} 공개된 혼잡도 자료가 없어, 이 역을 오가는 사람 수로 붐비는 정도를 가늠합니다.`
+          : '이 역은 혼잡도 자료가 없는 구간이라, 역을 오가는 사람 수로 붐비는 정도를 가늠합니다.');
       if (sb.day !== 'w' && !dirs.length) notes.push('승하차 자료는 한 달 평균이라 요일을 바꿔도 같은 값이에요.');
       sbEl('sbNote').hidden = !notes.length;
       sbEl('sbNote').textContent = notes.join(' ');
@@ -3802,7 +3815,7 @@
       const li = (r) => `<li><button type="button" data-st="${sbEsc(r.n)}"><span class="nm">${sbEsc(r.n)}</span><span class="val lv-${r.lv}">${r.t}</span></button></li>`;
       sbEl('sbRankHi').innerHTML = rows.slice(0, k).map(li).join('');
       sbEl('sbRankLo').innerHTML = rows.slice(-k).reverse().map(li).join('');
-      sbEl('sbRankTitle').textContent = `${sb.line}호선 ${sbFmtSlot(sb.data.meta.slots[sb.slot])} 무렵 붐비는 역 · 한산한 역`;
+      sbEl('sbRankTitle').textContent = `${sbLineName(sb.line)} ${sbFmtSlot(sb.data.meta.slots[sb.slot])} 무렵 붐비는 역 · 한산한 역`;
       const note = sb.rank === 'c'
         ? `열차 혼잡도는 두 방향 중 더 붐비는 쪽 값입니다${sts.some((s) => !s.c) ? ' (혼잡도 자료가 있는 서울교통공사 구간 역만)' : ''}.`
         : '역 승하차는 그 시간대에 이 역에서 타고 내린 사람 수(하루 평균)입니다. 요일 구분이 없어요.';
