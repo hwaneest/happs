@@ -1974,15 +1974,20 @@
     /* 본부 워크샵 설문은 비밀번호를 맞혀야 열립니다 (홈에서 눌러도, #workshop 링크로 바로 와도).
        비밀번호 원문 대신 SHA-256 해시만 둡니다. 바꾸려면 터미널에서
        printf 'happs-workshop:새비밀번호' | shasum -a 256  결과를 WS_PASS_HASH 에 넣으세요.
-       앱 화면을 떠나면 다시 잠기므로, 열 때마다 비밀번호를 묻습니다. */
+       앱 화면을 떠나면 다시 잠기므로, 열 때마다 비밀번호를 묻습니다.
+       WS_LOCK_FROM 전에는 잠금 없이 바로 열리고, 그 시각부터 다시 비밀번호를 묻습니다.
+       (2026년 11월 말까지 임시로 풀어 둠 → 12월 1일 0시(한국 시간)부터 자동으로 다시 잠김.
+        잠금을 계속 쓰려면 WS_LOCK_FROM 을 지난 날짜로 두거나 이 기능을 지우면 됩니다.) */
     const WS_PASS_HASH = '08e3a63583ec6b67d0dc21b58a000ecebbbac2d287f4af2192f326b117fb2800';
+    const WS_LOCK_FROM = new Date('2026-12-01T00:00:00+09:00');
+    const wsLockActive = () => Date.now() >= WS_LOCK_FROM.getTime();
     let wsUnlocked = false;
 
     function route() {
       const key = (location.hash.replace('#', '') || 'store');
       let target = views[key] && key !== 'workshop-lock' ? key : 'store';
       if (target !== 'workshop') wsUnlocked = false;
-      else if (!wsUnlocked) target = 'workshop-lock';
+      else if (!wsUnlocked && wsLockActive()) target = 'workshop-lock';
       Object.entries(views).forEach(([name, elm]) => {
         elm.hidden = name !== target;
       });
