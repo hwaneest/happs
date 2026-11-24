@@ -17,6 +17,7 @@
  *   deploymentId AKfycbx3OYrwjbZu04zlv30GYRlCY8cgdXilxC1DqRx8OFBme5KsFOhVyjdtCa9grn4kMO5n8g
  *   (clasp 로 코드를 고친 뒤 `clasp create-deployment --deploymentId <위 ID>` 로 올리면 URL이 그대로 유지됩니다.
  *    매니페스트 appsscript.json 에 webapp: executeAs USER_DEPLOYING / access ANYONE_ANONYMOUS 필요)
+ *   이 프로젝트에는 Forum.gs(HR 인사이트 포럼 4조 설문)도 함께 올라갑니다. 올릴 때는 두 파일을 모두 push 하세요.
  */
 
 // ── 설정 ────────────────────────────────────────────────
@@ -56,7 +57,10 @@ var TOPICS = {
 
 // ── 엔트리 포인트 ────────────────────────────────────────
 function doPost(e) {
-  return json(handle((e && e.parameter) || {}));
+  var params = (e && e.parameter) || {};
+  // HR 인사이트 포럼 4조 설문은 같은 웹앱 URL로 받고 Forum.gs 에서 처리합니다.
+  if (params.form === 'forum4') return json(handleForum(params));
+  return json(handle(params));
 }
 
 function json(result) {
