@@ -814,6 +814,64 @@
       }
     }
     .sb .app-header p { word-break: keep-all; }
+
+    /* ===== 히든 워드 (단어 유사도 게임) ===== */
+    .hw { max-width: 720px; --hw-hot: #e5484d; --hw-warm: #ef6a1f; --hw-mild: #c98a00; --hw-cold: #9aa3b5; }
+    @media (prefers-color-scheme: dark) {
+      .hw { --hw-hot: #ff6b6f; --hw-warm: #ff8a4c; --hw-mild: #e3b23c; --hw-cold: #5f6779; }
+    }
+    .hw .app-header p { word-break: keep-all; }
+    .hw-loading { color: var(--muted); font-size: 14px; padding: 24px 0; }
+    .hw-top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; margin-bottom: 6px; }
+    .hw-no { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; }
+    .hw-next { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .hw-hint { font-size: 13.5px; color: var(--muted); margin: 0 0 14px; word-break: keep-all; }
+    .hw-hint b { color: var(--text); font-variant-numeric: tabular-nums; }
+    .hw-form { display: flex; gap: 8px; }
+    .hw-form input { flex: 1; min-width: 0; font-size: 16px; }
+    .hw-form button { flex-shrink: 0; padding: 0 20px; font-size: 15px; font-weight: 700; }
+    .hw-msg { min-height: 20px; font-size: 13px; color: var(--muted); margin: 8px 0 0; word-break: keep-all; }
+    .hw-msg.err { color: #e5484d; }
+    .hw-done {
+      margin-top: 16px; padding: 18px; border-radius: 14px; background: var(--accent-soft); text-align: center;
+    }
+    .hw-done h2 { margin: 0 0 4px; font-size: 20px; letter-spacing: -0.02em; }
+    .hw-done p { margin: 0; color: var(--muted); font-size: 14px; }
+    .hw-done .hw-answer { color: var(--accent); }
+    .hw-done .toolbar { justify-content: center; border-top: none; padding-top: 0; }
+    .hw-near { list-style: none; padding: 0; margin: 14px 0 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+    .hw-near li { background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 3px 11px; font-size: 13px; }
+    .hw-near li span { color: var(--muted); font-size: 12px; margin-left: 4px; font-variant-numeric: tabular-nums; }
+    .hw-table-wrap { margin-top: 18px; }
+    .hw-table { width: 100%; border-collapse: collapse; font-size: 14.5px; font-variant-numeric: tabular-nums; }
+    .hw-table th { font-size: 12px; color: var(--muted); font-weight: 600; text-align: left; padding: 0 8px 8px; border-bottom: 1px solid var(--border); }
+    .hw-table td { padding: 9px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .hw-table .n { width: 44px; color: var(--muted); font-size: 12.5px; }
+    .hw-table .w { font-weight: 700; word-break: keep-all; }
+    .hw-table .s { width: 72px; text-align: right; font-weight: 700; }
+    .hw-table .r { width: 38%; }
+    .hw-table tr.last td { background: var(--accent-soft); }
+    .hw-table tr.sep td { padding: 0; border-bottom: 2px solid var(--border); }
+    .hw-rank { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); }
+    .hw-bar { flex: 1; height: 8px; border-radius: 999px; background: var(--bg); overflow: hidden; min-width: 40px; }
+    .hw-bar i { display: block; height: 100%; border-radius: 999px; background: var(--hw-c); }
+    .hw-rank b { min-width: 52px; text-align: right; color: var(--hw-c); font-weight: 700; }
+    .hw-c-win { --hw-c: var(--accent); }
+    .hw-c-hot { --hw-c: var(--hw-hot); }
+    .hw-c-warm { --hw-c: var(--hw-warm); }
+    .hw-c-mild { --hw-c: var(--hw-mild); }
+    .hw-c-cold { --hw-c: var(--hw-cold); }
+    .hw-foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-top: 16px; }
+    .hw-help { font-size: 13.5px; color: var(--muted); margin-top: 22px; }
+    .hw-help summary { cursor: pointer; font-weight: 600; color: var(--text); }
+    .hw-help ul { margin: 8px 0 0; padding-left: 18px; }
+    .hw-help li { margin: 4px 0; word-break: keep-all; }
+    .hw-help a { color: var(--accent); }
+    @media (max-width: 560px) {
+      .hw-table .r { width: 34%; }
+      .hw-bar { display: none; }
+      .hw-table .n { width: 30px; }
+    }
     .sb-loading { color: var(--muted); font-size: 14px; padding: 24px 0; }
     .sb-lines { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
     .sb-lines button {
@@ -940,6 +998,7 @@
         <button class="cat-tab" type="button" role="tab" data-cat="operation" aria-selected="false">Operation Improvement <span class="cat-n">2</span></button>
         <button class="cat-tab" type="button" role="tab" data-cat="utilities" aria-selected="false">Utilities <span class="cat-n">5</span></button>
         <button class="cat-tab" type="button" role="tab" data-cat="lifestyle" aria-selected="false">Lifestyle <span class="cat-n">1</span></button>
+        <button class="cat-tab" type="button" role="tab" data-cat="game" aria-selected="false">Games <span class="cat-n">1</span></button>
         <button class="cat-tab" type="button" role="tab" data-cat="info" aria-selected="false">Information Desk <span class="cat-n">1</span></button>
       </div>
 
@@ -1115,6 +1174,27 @@
               <div class="app-action">
                 <span class="pill">열기</span>
                 <span class="card-views" data-card-views="subway">조회수 <strong>–</strong></span>
+              </div>
+            </a>
+        </div>
+      </div>
+
+      <div class="cat-section" data-cat="game">
+        <div class="section-title">Games <span class="cat-desc">잠깐 머리를 식히는 가벼운 게임</span></div>
+        <div class="app-grid">
+            <a class="app available" href="#wordsim"
+               data-name="히든 워드 hidden word 단어 유사도 게임 오늘의 단어 낱말 맞히기 퀴즈 추리 인공지능 AI games">
+              <div class="app-top">
+                <div class="app-icon" style="background:#f1ecfe;">🎯</div>
+                <div>
+                  <p class="app-name">히든 워드</p>
+                  <div class="app-cat">단어 유사도 게임</div>
+                </div>
+              </div>
+              <p class="app-desc">단어를 넣으면 숨은 오늘의 단어와 뜻이 얼마나 가까운지 AI가 유사도로 알려 줍니다. 유사도를 따라가 정답을 맞혀 보세요.</p>
+              <div class="app-action">
+                <span class="pill">열기</span>
+                <span class="card-views" data-card-views="wordsim">조회수 <strong>–</strong></span>
               </div>
             </a>
         </div>
@@ -1908,6 +1988,77 @@
            새 혼잡도 자료는 분기마다, 승하차 자료는 매월 나오니
            그때 python3 scripts/build-subway-data.py 를 실행해 자료를 새로 만들고 커밋하면 됩니다. -->
     </section>
+
+    <!-- ============ 히든 워드 (단어 유사도 게임) ============ -->
+    <section id="view-wordsim" class="hw" hidden>
+      <button class="back" data-nav="#store">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        앱 목록
+      </button>
+
+      <header class="app-header">
+        <h1>히든 워드 🎯</h1>
+        <p>오늘의 단어가 숨어 있어요. 아무 단어나 넣으면 그 단어가 정답과 얼마나 가까운지 유사도로 알려 드립니다. 유사도가 높은 쪽으로 좁혀 가며 정답을 맞혀 보세요.</p>
+        <div class="views" data-views="wordsim">조회수 <strong>–</strong></div>
+      </header>
+
+      <div class="hw-loading" id="hwLoading">단어 자료를 불러오는 중…</div>
+
+      <div id="hwApp" hidden>
+        <div class="editor-card">
+          <div class="hw-top">
+            <div class="hw-no" id="hwNo"></div>
+            <div class="hw-next" id="hwNext"></div>
+          </div>
+          <p class="hw-hint" id="hwHint"></p>
+          <form class="hw-form" id="hwForm" autocomplete="off">
+            <input type="text" id="hwInput" placeholder="단어 입력 (예: 바다, 행복, 달리다)" maxlength="20"
+                   autocapitalize="off" spellcheck="false" enterkeyhint="send" />
+            <button type="submit" class="tool primary">추측</button>
+          </form>
+          <p class="hw-msg" id="hwMsg"></p>
+
+          <div class="hw-done" id="hwDone" hidden>
+            <h2 id="hwDoneTitle"></h2>
+            <p id="hwDoneDesc"></p>
+            <ul class="hw-near" id="hwNear"></ul>
+            <div class="toolbar" style="margin-top:14px;">
+              <button type="button" class="tool primary" id="hwShare">결과 복사</button>
+            </div>
+          </div>
+
+          <div class="hw-table-wrap" id="hwTableWrap" hidden>
+            <table class="hw-table">
+              <thead><tr><th class="n">#</th><th>단어</th><th class="s">유사도</th><th class="r">순위</th></tr></thead>
+              <tbody id="hwRows"></tbody>
+            </table>
+          </div>
+
+          <div class="hw-foot">
+            <span class="hw-next" id="hwCount"></span>
+            <button type="button" class="tool" id="hwGiveUp">포기하고 정답 보기</button>
+          </div>
+        </div>
+
+        <details class="hw-help">
+          <summary>어떻게 하나요?</summary>
+          <ul>
+            <li>정답은 하루에 하나, 모두에게 같은 단어입니다. 한국 시간 자정에 새 단어로 바뀝니다.</li>
+            <li>유사도는 -100~100 사이 값이고, 높을수록 정답과 뜻이나 쓰임새가 가깝습니다. 정답은 100입니다.</li>
+            <li>순위는 정답과 가장 가까운 단어 1,000개 안에서 몇 번째인지입니다. 1위가 정답 바로 옆 단어예요.</li>
+            <li>조사·어미를 붙이지 말고 기본형으로 넣어 주세요 (사과를 → 사과, 먹었다 → 먹다). 명사와 동사·형용사 기본형 약 4만 개를 알아듣습니다.</li>
+            <li>유사도는 인공지능 단어 벡터로 계산합니다. 웹 문서와 위키백과의 방대한 한국어 텍스트에서 단어가 함께 쓰이는 맥락을 학습한 값이라, 뜻이 반대여도 같은 맥락에 자주 나오면 가깝게 나올 수 있어요.
+              (<a href="https://fasttext.cc/docs/en/crawl-vectors.html" target="_blank" rel="noopener">fastText 한국어 벡터</a>, CC BY-SA 3.0)</li>
+          </ul>
+        </details>
+      </div>
+
+      <!-- 📌 문제 갱신 메모: 문제는 data/wordsim/ 에 135개(2026-11-25부터 하루 하나) 들어 있고, 다 쓰면 처음부터 되풀이됩니다.
+           더 늘리려면 scripts/build-wordsim-data.py 의 HIDDEN 맨 뒤에 단어를 붙이고 다시 만들어 커밋하세요. -->
+    </section>
   </div>
 
   <!-- ============ CHECKHERE POPUP ============ -->
@@ -1968,6 +2119,7 @@
       contact: document.getElementById('view-contact'),
       workshop: document.getElementById('view-workshop'),
       subway: document.getElementById('view-subway'),
+      wordsim: document.getElementById('view-wordsim'),
       'workshop-lock': document.getElementById('view-workshop-lock'),
     };
 
@@ -2001,6 +2153,7 @@
       }
       countView(target);
       if (target === 'subway') sbOpen();
+      if (target === 'wordsim') hwOpen();
     }
 
     const wsLockForm = document.getElementById('wsLockForm');
@@ -2161,6 +2314,7 @@
     function filterStore() {
       const q = search.value.trim().toLowerCase();
       let visible = 0;
+      let placeholders = 0;
       sections.forEach((sec) => {
         const inCat = currentCat === 'all' ? true : sec.dataset.cat === currentCat;
         let shown = 0;
@@ -2171,10 +2325,14 @@
           if (show && card.classList.contains('available')) { shown++; visible++; }
         });
         // '준비 중' 카드는 전체 탭에서 검색어가 없을 때만 보입니다.
+        // 아직 앱이 없는 카테고리(예: Game)는 그 탭을 골랐을 때 자기 '준비 중' 카드를 보여 줍니다.
         const isSoon = sec.dataset.cat === 'soon';
-        sec.hidden = isSoon ? !(currentCat === 'all' && !q) : shown === 0;
+        const placeholder = !isSoon && shown === 0 && !q && currentCat === sec.dataset.cat
+          && sec.querySelector('.app.soon');
+        if (placeholder) placeholders++;
+        sec.hidden = isSoon ? !(currentCat === 'all' && !q) : (shown === 0 && !placeholder);
       });
-      emptyEl.hidden = visible !== 0;
+      emptyEl.hidden = visible !== 0 || placeholders !== 0;
     }
 
     function selectCat(cat) {
@@ -3919,6 +4077,205 @@
         : '역 승하차는 그 시간대에 이 역에서 타고 내린 사람 수(하루 평균)입니다. 요일 구분이 없어요.';
       sbEl('sbRankNote').hidden = false;
       sbEl('sbRankNote').textContent = note;
+    }
+
+    /* ============ 히든 워드 (단어 유사도 게임) ============ */
+    // 자료: data/wordsim/ (scripts/build-wordsim-data.py 로 만듭니다)
+    //  - vocab.txt: 추측할 수 있는 단어 (한 줄에 하나)
+    //  - p/NNN.bin: 문제 NNN번의 유사도 (Int16, 코사인 유사도 × 10000, vocab.txt 순서. 정답은 10000)
+    const HW_DIR = 'data/wordsim/';
+    const HW_TOP = 1000;          // 순위를 보여 주는 범위
+    const hwEl = (id) => document.getElementById(id);
+    const hw = { loading: null, vocab: null, index: null, meta: null, day: -1, sims: null, sorted: null, answer: -1, st: null };
+
+    // 한국 시간 기준 오늘이 첫 문제 날짜로부터 며칠째인지
+    function hwDayNo(meta) {
+      const ymd = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(new Date());
+      const [y, m, d] = ymd.split('-').map(Number);
+      const [sy, sm, sd] = meta.start.split('-').map(Number);
+      return Math.round((Date.UTC(y, m - 1, d) - Date.UTC(sy, sm - 1, sd)) / 86400000);
+    }
+
+    function hwLoadBase() {
+      if (!hw.loading) {
+        hw.loading = Promise.all([
+          fetch(HW_DIR + 'meta.json', { cache: 'no-cache' }).then((r) => { if (!r.ok) throw r; return r.json(); }),
+          fetch(HW_DIR + 'vocab.txt').then((r) => { if (!r.ok) throw r; return r.text(); }),
+        ]).then(([meta, text]) => {
+          hw.meta = meta;
+          hw.vocab = text.split('\n').filter(Boolean);
+          hw.index = new Map(hw.vocab.map((w, i) => [w, i]));
+        }).catch((e) => { hw.loading = null; throw e; });
+      }
+      return hw.loading;
+    }
+
+    async function hwOpen() {
+      try {
+        await hwLoadBase();
+        const day = Math.max(0, hwDayNo(hw.meta));
+        if (day !== hw.day) {
+          const n = day % hw.meta.count;
+          const res = await fetch(HW_DIR + 'p/' + String(n).padStart(3, '0') + '.bin');
+          if (!res.ok) throw res;
+          hw.sims = new Int16Array(await res.arrayBuffer());
+          hw.sorted = Int16Array.from(hw.sims).sort().reverse();
+          hw.answer = hw.sims.indexOf(10000);
+          hw.day = day;
+          hwLoadState();
+        }
+        hwEl('hwLoading').hidden = true;
+        hwEl('hwApp').hidden = false;
+        hwRender();
+        hwTick();
+        if (!hw.st.done && matchMedia('(hover: hover)').matches) hwEl('hwInput').focus();
+      } catch (e) {
+        hwEl('hwLoading').textContent = '단어 자료를 불러오지 못했어요. 인터넷 연결을 확인하고 다시 열어 주세요.';
+      }
+    }
+
+    function hwLoadState() {
+      let st = null;
+      try { st = JSON.parse(localStorage.getItem('happs_wordsim') || 'null'); } catch (e) {}
+      if (!st || st.day !== hw.day || !Array.isArray(st.g)) st = { day: hw.day, g: [], done: '' };
+      // 혹시 단어 목록이 바뀌어 모르는 단어가 남아 있으면 버립니다.
+      st.g = st.g.filter((w) => hw.index.has(w));
+      hw.st = st;
+    }
+    function hwSave() {
+      try { localStorage.setItem('happs_wordsim', JSON.stringify(hw.st)); } catch (e) {}
+    }
+
+    // 정답보다 유사도가 높은 단어 수 = 순위 (정답 0, 가장 가까운 단어 1위)
+    function hwRank(sim) {
+      let lo = 0, hi = hw.sorted.length;
+      while (lo < hi) { const mid = (lo + hi) >> 1; if (hw.sorted[mid] > sim) lo = mid + 1; else hi = mid; }
+      return lo;
+    }
+    const hwFmt = (v) => (v / 100).toFixed(2);
+    const hwLevel = (rank) => rank === 0 ? 'win' : rank <= 10 ? 'hot' : rank <= 100 ? 'warm' : rank <= HW_TOP ? 'mild' : 'cold';
+
+    function hwRow(w, no, last) {
+      const i = hw.index.get(w);
+      const sim = hw.sims[i];
+      const rank = i === hw.answer ? 0 : hwRank(sim);
+      const lv = hwLevel(rank);
+      const label = rank === 0 ? '정답!' : rank <= HW_TOP ? `${rank.toLocaleString('ko-KR')}위` : `${HW_TOP.toLocaleString('ko-KR')}위 밖`;
+      const pct = rank <= HW_TOP ? Math.max(3, (HW_TOP + 1 - rank) / HW_TOP * 100) : 0;
+      return `<tr class="${last ? 'last' : ''}"><td class="n">${no}</td><td class="w">${sbEsc(w)}</td>`
+        + `<td class="s">${hwFmt(sim)}</td><td class="r"><div class="hw-rank hw-c-${lv}">`
+        + `<div class="hw-bar"><i style="width:${pct}%"></i></div><b>${label}</b></div></td></tr>`;
+    }
+
+    function hwRender() {
+      const st = hw.st;
+      const fmtS = (k) => hwFmt(hw.sorted[k]);
+      hwEl('hwNo').textContent = `오늘의 단어 #${hw.day + 1}`;
+      hwEl('hwHint').innerHTML = `정답과 가장 가까운 단어의 유사도는 <b>${fmtS(1)}</b>, 10번째는 <b>${fmtS(10)}</b>, `
+        + `1,000번째는 <b>${fmtS(HW_TOP)}</b>입니다.`;
+
+      const g = st.g;
+      hwEl('hwTableWrap').hidden = g.length === 0;
+      if (g.length) {
+        const order = g.map((w, k) => ({ w, no: k + 1 })).sort((a, b) => hw.sims[hw.index.get(b.w)] - hw.sims[hw.index.get(a.w)]);
+        const last = g[g.length - 1];
+        hwEl('hwRows').innerHTML = hwRow(last, g.length, true) + '<tr class="sep"><td colspan="4"></td></tr>'
+          + order.map((o) => hwRow(o.w, o.no, false)).join('');
+      }
+      hwEl('hwCount').textContent = g.length ? `추측 ${g.length}번` : '';
+
+      const done = !!st.done;
+      hwEl('hwDone').hidden = !done;
+      hwEl('hwGiveUp').hidden = done;
+      hwEl('hwInput').disabled = st.done === 'gaveup';
+      if (done) {
+        const ans = hw.vocab[hw.answer];
+        hwEl('hwDoneTitle').innerHTML = st.done === 'win'
+          ? `🎉 정답! <span class="hw-answer">${sbEsc(ans)}</span>`
+          : `정답은 <span class="hw-answer">${sbEsc(ans)}</span>였어요`;
+        hwEl('hwDoneDesc').textContent = st.done === 'win'
+          ? `${st.n}번 만에 맞혔어요. 정답과 가장 가까운 단어들:`
+          : '내일 새 단어로 다시 도전해 보세요. 정답과 가장 가까운 단어들:';
+        const near = [];
+        for (let k = 1; near.length < 10 && k < hw.sorted.length; k++) {
+          // 같은 유사도가 여러 개일 수 있어 순위 k의 단어를 직접 찾습니다.
+          const sim = hw.sorted[k];
+          hw.sims.forEach((v, i) => { if (v === sim && i !== hw.answer && near.length < 10 && !near.some((x) => x.i === i)) near.push({ i, v }); });
+        }
+        hwEl('hwNear').innerHTML = near.map((x) => `<li>${sbEsc(hw.vocab[x.i])}<span>${hwFmt(x.v)}</span></li>`).join('');
+      }
+    }
+
+    function hwMsg(text, err) {
+      const m = hwEl('hwMsg');
+      m.textContent = text;
+      m.classList.toggle('err', !!err);
+    }
+
+    hwEl('hwForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!hw.st || hw.st.done === 'gaveup') return;
+      const input = hwEl('hwInput');
+      const w = input.value.replace(/\s+/g, '');
+      if (!w) return;
+      if (!hw.index.has(w)) {
+        hwMsg(`'${w}'은(는) 모르는 단어예요. 조사·어미 없이 기본형으로 넣어 보세요 (사과를 → 사과, 먹었다 → 먹다).`, true);
+        input.select();
+        return;
+      }
+      input.value = '';
+      if (hw.st.g.includes(w)) {
+        hwMsg(`'${w}'은(는) 이미 넣은 단어예요.`, true);
+      } else {
+        hw.st.g.push(w);
+        if (hw.index.get(w) === hw.answer && !hw.st.done) {
+          hw.st.done = 'win';
+          hw.st.n = hw.st.g.length;
+          hwMsg('');
+        } else {
+          hwMsg(hw.st.done ? '정답을 맞힌 뒤에도 다른 단어를 계속 넣어 볼 수 있어요.' : '');
+        }
+        hwSave();
+      }
+      hwRender();
+    });
+
+    hwEl('hwGiveUp').addEventListener('click', () => {
+      if (!hw.st || hw.st.done) return;
+      if (!window.confirm('포기하고 오늘의 정답을 볼까요? 오늘은 더 이상 추측할 수 없어요.')) return;
+      hw.st.done = 'gaveup';
+      hwSave();
+      hwMsg('');
+      hwRender();
+    });
+
+    hwEl('hwShare').addEventListener('click', async () => {
+      const st = hw.st;
+      const best = Math.min(...st.g.filter((w) => hw.index.get(w) !== hw.answer).map((w) => hwRank(hw.sims[hw.index.get(w)])), Infinity);
+      const lines = [`히든 워드 #${hw.day + 1} 🎯`];
+      lines.push(st.done === 'win' ? `${st.n}번 만에 정답!` : `포기 (추측 ${st.g.length}번)`);
+      if (best <= HW_TOP) lines.push(`정답 전 가장 가까웠던 순위: ${best}위`);
+      lines.push(location.origin + location.pathname + '#wordsim');
+      try {
+        await navigator.clipboard.writeText(lines.join('\n'));
+        showToast('결과를 복사했어요');
+      } catch (e) {
+        showToast('복사하지 못했어요');
+      }
+    });
+
+    // 다음 문제까지 남은 시간 (화면이 열려 있을 때만 1초마다)
+    let hwTimer = null;
+    function hwTick() {
+      clearTimeout(hwTimer);
+      if (hwEl('view-wordsim').hidden) return;
+      const now = new Date();
+      const kst = new Date(now.getTime() + 9 * 3600000);
+      const left = 86400000 - (kst.getTime() % 86400000);
+      if (left < 1000 || (hw.meta && Math.max(0, hwDayNo(hw.meta)) !== hw.day)) { hwOpen(); return; }
+      const h = Math.floor(left / 3600000), m = Math.floor(left / 60000) % 60, sec = Math.floor(left / 1000) % 60;
+      hwEl('hwNext').textContent = `다음 단어까지 ${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+      hwTimer = setTimeout(hwTick, 1000 - (now.getTime() % 1000) + 5);
     }
 
     // 초기화
