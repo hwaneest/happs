@@ -851,11 +851,10 @@
     .hw-table .s { width: 72px; text-align: right; font-weight: 700; }
     .hw-table .r { width: 38%; }
     .hw-table tr.last td { background: var(--accent-soft); }
-    .hw-table tr.sep td { padding: 0; border-bottom: 2px solid var(--border); }
     .hw-rank { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); }
     .hw-bar { flex: 1; height: 8px; border-radius: 999px; background: var(--bg); overflow: hidden; min-width: 40px; }
     .hw-bar i { display: block; height: 100%; border-radius: 999px; background: var(--hw-c); }
-    .hw-rank b { min-width: 52px; text-align: right; color: var(--hw-c); font-weight: 700; }
+    .hw-rank b { min-width: 70px; text-align: right; color: var(--hw-c); font-weight: 700; }
     .hw-c-win { --hw-c: var(--accent); }
     .hw-c-hot { --hw-c: var(--hw-hot); }
     .hw-c-warm { --hw-c: var(--hw-warm); }
@@ -4179,8 +4178,8 @@
       if (g.length) {
         const order = g.map((w, k) => ({ w, no: k + 1 })).sort((a, b) => hw.sims[hw.index.get(b.w)] - hw.sims[hw.index.get(a.w)]);
         const last = g[g.length - 1];
-        hwEl('hwRows').innerHTML = hwRow(last, g.length, true) + '<tr class="sep"><td colspan="4"></td></tr>'
-          + order.map((o) => hwRow(o.w, o.no, false)).join('');
+        // 유사도 높은 순으로만 보여 주고, 방금 넣은 단어는 그 자리에서 강조합니다.
+        hwEl('hwRows').innerHTML = order.map((o) => hwRow(o.w, o.no, o.w === last)).join('');
       }
       hwEl('hwCount').textContent = g.length ? `추측 ${g.length}번` : '';
 
