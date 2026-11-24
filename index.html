@@ -796,6 +796,15 @@
     .ws-done h2 { font-size: 20px; margin: 0 0 8px; }
     .ws-done p { color: var(--muted); margin: 0 0 18px; font-size: 14.5px; word-break: keep-all; }
 
+    /* ===== HR 인사이트 포럼 4조 설문 (본부 워크샵 설문의 .ws 스타일을 같이 씀) ===== */
+    .fm .ws-tag { color: #d9692b; background: color-mix(in srgb, #d9692b 12%, transparent); }
+    .fm .ws-scope { border-color: #d9692b; background: color-mix(in srgb, #d9692b 9%, transparent); }
+    .fm .ws-scope strong { color: #c2571d; }
+    @media (prefers-color-scheme: dark) { .fm .ws-scope strong { color: #f3a46f; } }
+    .fm .ws-card.q { --ws-c: #d9692b; }
+    .fm .ws-q-desc { font-size: 14px; color: var(--muted); margin: 6px 0 0; word-break: keep-all; line-height: 1.6; }
+    .fm .ws-q-no { min-width: 0; }
+
     /* ===== 지하철 혼잡도 ===== */
     .sb {
       --lv1: #1f9d55; --lv1-soft: #e3f5ea;
@@ -994,7 +1003,7 @@
       <div class="cat-tabs" id="catTabs" role="tablist" aria-label="카테고리">
         <button class="cat-tab" type="button" role="tab" data-cat="all" aria-selected="true">전체</button>
         <button class="cat-tab" type="button" role="tab" data-cat="productivity" aria-selected="false">Productivity <span class="cat-n">2</span></button>
-        <button class="cat-tab" type="button" role="tab" data-cat="operation" aria-selected="false">Operation Improvement <span class="cat-n">2</span></button>
+        <button class="cat-tab" type="button" role="tab" data-cat="operation" aria-selected="false">Operation Improvement <span class="cat-n">3</span></button>
         <button class="cat-tab" type="button" role="tab" data-cat="utilities" aria-selected="false">Utilities <span class="cat-n">5</span></button>
         <button class="cat-tab" type="button" role="tab" data-cat="lifestyle" aria-selected="false">Lifestyle <span class="cat-n">1</span></button>
         <button class="cat-tab" type="button" role="tab" data-cat="game" aria-selected="false">Games <span class="cat-n">1</span></button>
@@ -1071,6 +1080,21 @@
               <div class="app-action">
                 <span class="pill">열기</span>
                 <span class="card-views" data-card-views="workshop">조회수 <strong>–</strong></span>
+              </div>
+            </a>
+            <a class="app available" href="#forum"
+               data-name="HR 인사이트 포럼 4조 팀프로젝트 설문 forum survey 채용 책임감 로열티 의견 취합 멘토 operation improvement">
+              <div class="app-top">
+                <div class="app-icon" style="background:#fdf0e6;">💬</div>
+                <div>
+                  <p class="app-name">HR 인사이트 포럼 4조</p>
+                  <div class="app-cat">설문</div>
+                </div>
+              </div>
+              <p class="app-desc">팀프로젝트 질문에 대한 4조 조원들의 생각을 모읍니다. 제출하면 조 대표 이메일로 바로 전달됩니다.</p>
+              <div class="app-action">
+                <span class="pill">열기</span>
+                <span class="card-views" data-card-views="forum">조회수 <strong>–</strong></span>
               </div>
             </a>
         </div>
@@ -1885,6 +1909,61 @@
       </div>
     </section>
 
+    <!-- ============ HR 인사이트 포럼 4조 설문 APP VIEW ============ -->
+    <section id="view-forum" class="ws fm" hidden>
+      <button class="back" data-nav="#store">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        앱 목록
+      </button>
+
+      <header class="app-header">
+        <span class="ws-tag">HR 인사이트 포럼 · 팀프로젝트</span>
+        <h1>[4조] 질문별 의견 모으기</h1>
+        <p>안녕하세요! 4조 팀프로젝트 질문에 대한 각자의 생각을 모아 조 의견으로 종합하려고 합니다.
+           정답은 없으니 경험이나 아이디어를 편하게, 키워드만 적어 주셔도 충분합니다. 🙂</p>
+        <div class="ws-scope">
+          📌 <strong>답변 범위: 총 <span id="fmCount">1</span>문항</strong> — 질문은 앞으로 더 추가될 수 있어요.
+          작성 중인 내용은 이 브라우저에 자동 저장되고, <strong>답변 복사하기</strong>로 내 답을 따로 챙겨 둘 수도 있습니다.
+        </div>
+        <div class="views" data-views="forum">조회수 <strong>–</strong></div>
+      </header>
+
+      <form id="fmForm" novalidate>
+        <div class="ws-card">
+          <div class="ws-row">
+            <label class="ws-field">
+              <span>이름 <span class="req">*</span></span>
+              <input type="text" name="name" placeholder="예: 홍길동" autocomplete="name" />
+            </label>
+            <label class="ws-field">
+              <span>소속 (회사·직무)</span>
+              <input type="text" name="org" placeholder="예: OO전자 인사팀" autocomplete="organization" />
+            </label>
+          </div>
+        </div>
+
+        <div id="fmQuestions"></div>
+
+        <div class="ws-submit-bar">
+          <span class="ws-progress" id="fmProgress"></span>
+          <button type="button" class="tool" id="fmReset">초기화</button>
+          <button type="button" class="tool" id="fmCopy">답변 복사하기</button>
+          <button type="submit" class="ws-submit" id="fmSubmit">제출하기 →</button>
+        </div>
+      </form>
+
+      <div class="ws-card ws-done" id="fmDone" hidden>
+        <div class="big">🙌</div>
+        <h2>제출됐습니다. 감사합니다!</h2>
+        <p>보내 주신 의견은 4조 대표에게 이메일로 전달되었습니다. 취합해서 조 의견으로 정리한 뒤 공유드리겠습니다. 🙂</p>
+        <button type="button" class="tool" id="fmCopyDone">보낸 답변 복사하기</button>
+        <button type="button" class="tool" id="fmAgain">다시 작성하기</button>
+      </div>
+    </section>
+
     <!-- ============ 지하철 혼잡도 APP VIEW ============ -->
     <section id="view-subway" class="sb" hidden>
       <button class="back" data-nav="#store">
@@ -2117,6 +2196,7 @@
       checkhere: document.getElementById('view-checkhere'),
       contact: document.getElementById('view-contact'),
       workshop: document.getElementById('view-workshop'),
+      forum: document.getElementById('view-forum'),
       subway: document.getElementById('view-subway'),
       wordsim: document.getElementById('view-wordsim'),
       'workshop-lock': document.getElementById('view-workshop-lock'),
@@ -3772,6 +3852,166 @@
 
     wsLoad();
     wsRender();
+
+    /* ============ HR 인사이트 포럼 4조 설문 ============ */
+    // 메일은 본부 워크샵 설문과 같은 Apps Script 웹앱(WORKSHOP_ENDPOINT)으로 보내고, form=forum4 로 구분합니다.
+    // 서버 코드는 Forum.gs 이고, 받는 주소는 Forum.gs 의 FORUM_TO_EMAIL 입니다.
+    // 질문을 추가하려면 아래 FM_QUESTIONS 에 한 줄씩 더하면 됩니다. 서버는 고칠 필요가 없습니다.
+    //   [키(바꾸지 않기), 번호, 질문 제목, 설명(선택)]
+    const FM_QUESTIONS = [
+      ['a', '질문 A', '채용할 때 “책임감”과 “로열티”를 어떻게 측정할까?',
+        '어떤 지원자가 책임감 있는 사람인지, 어떤 지원자가 조직에 로열티를 가질 사람인지를 어떻게 확인할 수 있을지가 고민입니다. 면접 질문, 과제, 평판 조회, 경험 사례 등 무엇이든 좋아요.'],
+    ];
+    const FM_KEY = 'happs_forum4_v1';   // 작성 중인 답을 이 브라우저에 임시 저장
+
+    const fmForm = document.getElementById('fmForm');
+    const fmSubmit = document.getElementById('fmSubmit');
+    const fmDone = document.getElementById('fmDone');
+    let fmLastSent = '';
+
+    document.getElementById('fmCount').textContent = FM_QUESTIONS.length;
+    const fmBox = document.getElementById('fmQuestions');
+    FM_QUESTIONS.forEach(([key, no, title, desc]) => {
+      const card = document.createElement('div');
+      card.className = 'ws-card q';
+      card.innerHTML = `<div class="ws-head"><div class="label"></div><h2></h2></div>`
+        + `<label class="ws-q" style="display:block">`
+        + (desc ? `<p class="ws-q-desc"></p>` : '')
+        + `<textarea placeholder="생각나는 대로 적어 주세요. 키워드만 적어도 괜찮아요"></textarea></label>`;
+      card.querySelector('.label').textContent = no;
+      card.querySelector('h2').textContent = title;
+      if (desc) card.querySelector('.ws-q-desc').textContent = desc;
+      const ta = card.querySelector('textarea');
+      ta.dataset.key = key;
+      ta.style.minHeight = '140px';
+      fmBox.appendChild(card);
+    });
+
+    const fmBoxes = () => [...fmForm.querySelectorAll('textarea[data-key]')];
+    const fmAnswer = (key) => (fmForm.querySelector(`textarea[data-key="${key}"]`) || {}).value || '';
+
+    function fmRender() {
+      const n = fmBoxes().filter((ta) => ta.value.trim()).length;
+      document.getElementById('fmProgress').innerHTML = `<strong>${n}</strong> / ${FM_QUESTIONS.length} 문항 작성`;
+    }
+
+    // 복사·메일에 쓰는 글 (질문과 답을 차례로)
+    function fmText() {
+      const name = fmForm.elements.name.value.trim();
+      const org = fmForm.elements.org.value.trim();
+      const lines = ['[HR 인사이트 포럼 4조] 팀프로젝트 의견'];
+      if (name || org) lines.push('이름: ' + (name || '-') + (org ? ' / 소속: ' + org : ''));
+      FM_QUESTIONS.forEach(([key, no, title]) => {
+        const a = fmAnswer(key).trim();
+        lines.push('', `■ [${no}] ${title}`, a || '(미작성)');
+      });
+      return lines.join('\n');
+    }
+
+    async function fmCopyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (e) {
+        const t = document.createElement('textarea');
+        t.value = text;
+        t.style.position = 'fixed';
+        t.style.opacity = '0';
+        document.body.appendChild(t);
+        t.select();
+        document.execCommand('copy');
+        t.remove();
+      }
+      showToast('답변을 클립보드에 복사했어요');
+    }
+
+    function fmSave() {
+      const d = { name: fmForm.elements.name.value, org: fmForm.elements.org.value, a: {} };
+      fmBoxes().forEach((ta) => { d.a[ta.dataset.key] = ta.value; });
+      try { localStorage.setItem(FM_KEY, JSON.stringify(d)); } catch (e) {}
+    }
+
+    function fmLoad() {
+      let d = null;
+      try { d = JSON.parse(localStorage.getItem(FM_KEY) || 'null'); } catch (e) {}
+      if (!d) return;
+      fmForm.elements.name.value = d.name || '';
+      fmForm.elements.org.value = d.org || '';
+      fmBoxes().forEach((ta) => { ta.value = (d.a || {})[ta.dataset.key] || ''; });
+    }
+
+    function fmClear() {
+      try { localStorage.removeItem(FM_KEY); } catch (e) {}
+      fmForm.reset();
+      fmForm.querySelectorAll('.invalid').forEach((el) => el.classList.remove('invalid'));
+      fmRender();
+    }
+
+    fmForm.addEventListener('input', (e) => {
+      e.target.classList.remove('invalid');
+      fmSave();
+      fmRender();
+    });
+
+    document.getElementById('fmReset').addEventListener('click', () => {
+      if (window.confirm('작성한 내용을 모두 지울까요?')) fmClear();
+    });
+    document.getElementById('fmCopy').addEventListener('click', () => {
+      if (!fmBoxes().some((ta) => ta.value.trim())) { showToast('아직 작성한 답변이 없어요'); return; }
+      fmCopyText(fmText());
+    });
+    document.getElementById('fmCopyDone').addEventListener('click', () => fmCopyText(fmLastSent));
+    document.getElementById('fmAgain').addEventListener('click', () => {
+      fmDone.hidden = true;
+      fmForm.hidden = false;
+      window.scrollTo(0, 0);
+    });
+
+    fmForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nameEl = fmForm.elements.name;
+      if (!nameEl.value.trim()) {
+        nameEl.classList.add('invalid');
+        nameEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        nameEl.focus({ preventScroll: true });
+        showToast('이름을 적어 주세요.');
+        return;
+      }
+      const empty = fmBoxes().filter((ta) => !ta.value.trim()).length;
+      if (empty === FM_QUESTIONS.length) { showToast('답변을 하나 이상 적어 주세요.'); return; }
+      if (empty && !window.confirm(`${empty}개 문항이 비어 있어요. 이대로 제출할까요?`)) return;
+      if (!WORKSHOP_ENDPOINT) { showToast('아직 메일 전송이 연결되지 않았어요. 관리자에게 알려 주세요.'); return; }
+
+      const data = new URLSearchParams({
+        form: 'forum4',
+        name: nameEl.value.trim(),
+        org: fmForm.elements.org.value.trim(),
+        qs: JSON.stringify(FM_QUESTIONS.map(([key, no, title]) => ({ no, title, answer: fmAnswer(key).trim() }))),
+      });
+
+      fmSubmit.disabled = true;
+      fmSubmit.textContent = '보내는 중…';
+      let res;
+      try {
+        res = await (await fetch(WORKSHOP_ENDPOINT, { method: 'POST', body: data })).json();
+      } catch (err) {
+        res = { ok: false, error: String(err) };
+      }
+      fmSubmit.disabled = false;
+      fmSubmit.textContent = '제출하기 →';
+
+      if (res.ok) {
+        fmLastSent = fmText();
+        fmClear();
+        fmForm.hidden = true;
+        fmDone.hidden = false;
+        window.scrollTo(0, 0);
+      } else {
+        showToast('제출에 실패했습니다. 잠시 후 다시 시도해 주세요. (작성 내용은 그대로 남아 있어요)');
+      }
+    });
+
+    fmLoad();
+    fmRender();
 
     /* ============ 지하철 혼잡도 ============ */
     // 자료: data/subway.json (scripts/build-subway-data.py 로 만듭니다)
