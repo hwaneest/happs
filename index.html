@@ -802,8 +802,9 @@
     .fm .ws-scope strong { color: #c2571d; }
     @media (prefers-color-scheme: dark) { .fm .ws-scope strong { color: #f3a46f; } }
     .fm .ws-card.q { --ws-c: #d9692b; }
+    .fm .ws-card.fm-top .ws-head { margin-bottom: 12px; }
+    .fm .ws-card.fm-top .ws-q-desc { margin: 0; }
     .fm .ws-q-desc { font-size: 14px; color: var(--muted); margin: 6px 0 0; word-break: keep-all; line-height: 1.6; }
-    .fm .ws-q-no { min-width: 0; }
 
     /* ===== 지하철 혼잡도 ===== */
     .sb {
@@ -1925,7 +1926,8 @@
         <p>안녕하세요! 4조 팀프로젝트 질문에 대한 각자의 생각을 모아 조 의견으로 종합하려고 합니다.
            정답은 없으니 경험이나 아이디어를 편하게, 키워드만 적어 주셔도 충분합니다. 🙂</p>
         <div class="ws-scope">
-          📌 <strong>답변 범위: 총 <span id="fmCount">1</span>문항</strong> — 질문은 앞으로 더 추가될 수 있어요.
+          📌 <strong>답변 범위: <span id="fmCount">질문 1개</span></strong> — 질문은 앞으로 더 추가될 수 있어요.
+          세부 질문은 아는 만큼만, 키워드로 적어도 괜찮습니다.
           작성 중인 내용은 이 브라우저에 자동 저장되고, <strong>답변 복사하기</strong>로 내 답을 따로 챙겨 둘 수도 있습니다.
         </div>
         <div class="views" data-views="forum">조회수 <strong>–</strong></div>
@@ -3856,12 +3858,49 @@
     /* ============ HR 인사이트 포럼 4조 설문 ============ */
     // 메일은 본부 워크샵 설문과 같은 Apps Script 웹앱(WORKSHOP_ENDPOINT)으로 보내고, form=forum4 로 구분합니다.
     // 서버 코드는 Forum.gs 이고, 받는 주소는 Forum.gs 의 FORUM_TO_EMAIL 입니다.
-    // 질문을 추가하려면 아래 FM_QUESTIONS 에 한 줄씩 더하면 됩니다. 서버는 고칠 필요가 없습니다.
-    //   [키(바꾸지 않기), 번호, 질문 제목, 설명(선택)]
+    // 질문을 추가하려면 아래 FM_QUESTIONS 에 묶음을 더하면 됩니다. 서버는 고칠 필요가 없습니다.
+    //   { no: 상위 번호, title: 상위 질문, desc: 설명(선택),
+    //     parts: [{ label: 파트 이름, title: 파트 질문, color: 강조색,
+    //               subs: [[키(바꾸지 않기), 세부 번호, 세부 질문, 도움말(선택)], ...] }, ...] }
     const FM_QUESTIONS = [
-      ['a', '질문 A', '채용할 때 “책임감”과 “로열티”를 어떻게 측정할까?',
-        '어떤 지원자가 책임감 있는 사람인지, 어떤 지원자가 조직에 로열티를 가질 사람인지를 어떻게 확인할 수 있을지가 고민입니다. 면접 질문, 과제, 평판 조회, 경험 사례 등 무엇이든 좋아요.'],
+      {
+        no: '질문 A',
+        title: '채용할 때 “책임감”과 “로열티”를 어떻게 측정할까?',
+        desc: '어떤 지원자가 책임감 있는 사람인지, 어떤 지원자가 조직에 로열티를 가질 사람인지를 어떻게 확인할 수 있을지가 고민입니다. 면접 질문, 과제, 평판 조회, 경험 사례 등 무엇이든 좋아요. 아래에서 책임감과 로열티를 나눠서 여쭤봅니다.',
+        parts: [
+          {
+            label: '① 책임감', title: '책임감 있는 지원자를 어떻게 알아볼까?', color: '#2f6fd8',
+            subs: [
+              ['r1', 'A-1.', '우리가 말하는 “책임감”은 어떤 행동으로 드러날까요?',
+                '예: 맡은 일을 끝까지 마무리한다, 문제가 생기면 먼저 알린다, 실수를 인정하고 바로잡는다'],
+              ['r2', 'A-2.', '지원자의 책임감을 확인할 수 있는 방법은?',
+                '면접 질문, 과제, 평판 조회 등. 효과적인 질문 예시가 있다면 함께 적어 주세요.'],
+              ['r3', 'A-3.', '채용 때 책임감을 잘 판단했던(또는 빗나갔던) 경험이 있나요?',
+                '직접 겪었거나 들은 사례. 무엇을 보고 판단했고 입사 뒤 어땠는지'],
+              ['r4', 'A-4.', '책임감을 측정할 때 주의할 점이나 한계는?',
+                '준비된 모범 답변, 면접관의 편향, 짧은 면접으로 알기 어려운 점 등'],
+            ],
+          },
+          {
+            label: '② 로열티', title: '조직에 로열티를 가질 지원자를 어떻게 알아볼까?', color: '#9257bd',
+            subs: [
+              ['y1', 'A-5.', '우리가 기대하는 “로열티”는 어떤 모습일까요?',
+                '예: 오래 함께 일하는 것, 회사 일을 내 일처럼 여기는 것, 어려울 때도 함께하는 것'],
+              ['y2', 'A-6.', '로열티를 가질 지원자를 가늠할 수 있는 신호나 방법은?',
+                '지원 동기, 이직 이력, 회사·직무에 대한 이해, 가치관 적합도, 면접 질문 등'],
+              ['y3', 'A-7.', '채용 때 로열티를 잘 판단했던(또는 빗나갔던) 경험이 있나요?',
+                '직접 겪었거나 들은 사례. 무엇을 보고 판단했고 입사 뒤 어땠는지'],
+              ['y4', 'A-8.', '로열티를 측정할 때 주의할 점이나 한계는?',
+                '이직이 흔해진 요즘 로열티 의미의 변화, 이직 이력만으로 판단하는 위험 등'],
+            ],
+          },
+        ],
+      },
     ];
+    // 세부 질문을 한 줄로 펼친 목록 (진행률·복사·전송에 씀)
+    const FM_ITEMS = FM_QUESTIONS.flatMap((g) => g.parts.flatMap((part) =>
+      part.subs.map(([key, no, title, hint]) => ({ key, no, title, hint, group: g, part }))));
+
     const FM_KEY = 'happs_forum4_v1';   // 작성 중인 답을 이 브라우저에 임시 저장
 
     const fmForm = document.getElementById('fmForm');
@@ -3869,22 +3908,45 @@
     const fmDone = document.getElementById('fmDone');
     let fmLastSent = '';
 
-    document.getElementById('fmCount').textContent = FM_QUESTIONS.length;
+    document.getElementById('fmCount').textContent = `질문 ${FM_QUESTIONS.length}개 · 세부 질문 ${FM_ITEMS.length}개`;
     const fmBox = document.getElementById('fmQuestions');
-    FM_QUESTIONS.forEach(([key, no, title, desc]) => {
+    const fmCard = (label, title) => {
       const card = document.createElement('div');
       card.className = 'ws-card q';
-      card.innerHTML = `<div class="ws-head"><div class="label"></div><h2></h2></div>`
-        + `<label class="ws-q" style="display:block">`
-        + (desc ? `<p class="ws-q-desc"></p>` : '')
-        + `<textarea placeholder="생각나는 대로 적어 주세요. 키워드만 적어도 괜찮아요"></textarea></label>`;
-      card.querySelector('.label').textContent = no;
+      card.innerHTML = `<div class="ws-head"><div class="label"></div><h2></h2></div>`;
+      card.querySelector('.label').textContent = label;
       card.querySelector('h2').textContent = title;
-      if (desc) card.querySelector('.ws-q-desc').textContent = desc;
-      const ta = card.querySelector('textarea');
-      ta.dataset.key = key;
-      ta.style.minHeight = '140px';
       fmBox.appendChild(card);
+      return card;
+    };
+    FM_QUESTIONS.forEach((g) => {
+      // 상위 질문 카드 (입력칸 없음)
+      const top = fmCard(g.no, g.title);
+      top.classList.add('fm-top');
+      if (g.desc) {
+        const d = document.createElement('p');
+        d.className = 'ws-q-desc';
+        d.textContent = g.desc;
+        top.appendChild(d);
+      }
+      // 파트별 카드 (책임감, 로열티 …)
+      g.parts.forEach((part) => {
+        const card = fmCard(`${g.no} · ${part.label}`, part.title);
+        if (part.color) card.style.setProperty('--ws-c', part.color);
+        part.subs.forEach(([key, no, title, hint]) => {
+          const q = document.createElement('label');
+          q.className = 'ws-q';
+          q.style.display = 'block';
+          q.innerHTML = `<div class="ws-q-title"><span class="ws-q-no"></span><span></span></div>`
+            + (hint ? `<div class="ws-hint"></div>` : '')
+            + `<textarea placeholder="키워드만 적어도 괜찮아요"></textarea>`;
+          q.querySelector('.ws-q-no').textContent = no;
+          q.querySelector('.ws-q-title span:last-child').textContent = title;
+          if (hint) q.querySelector('.ws-hint').textContent = hint;
+          q.querySelector('textarea').dataset.key = key;
+          card.appendChild(q);
+        });
+      });
     });
 
     const fmBoxes = () => [...fmForm.querySelectorAll('textarea[data-key]')];
@@ -3892,7 +3954,7 @@
 
     function fmRender() {
       const n = fmBoxes().filter((ta) => ta.value.trim()).length;
-      document.getElementById('fmProgress').innerHTML = `<strong>${n}</strong> / ${FM_QUESTIONS.length} 문항 작성`;
+      document.getElementById('fmProgress').innerHTML = `<strong>${n}</strong> / ${FM_ITEMS.length} 문항 작성`;
     }
 
     // 복사·메일에 쓰는 글 (질문과 답을 차례로)
@@ -3901,9 +3963,14 @@
       const org = fmForm.elements.org.value.trim();
       const lines = ['[HR 인사이트 포럼 4조] 팀프로젝트 의견'];
       if (name || org) lines.push('이름: ' + (name || '-') + (org ? ' / 소속: ' + org : ''));
-      FM_QUESTIONS.forEach(([key, no, title]) => {
-        const a = fmAnswer(key).trim();
-        lines.push('', `■ [${no}] ${title}`, a || '(미작성)');
+      FM_QUESTIONS.forEach((g) => {
+        lines.push('', `■ [${g.no}] ${g.title}`);
+        g.parts.forEach((part) => {
+          lines.push('', `▶ ${part.label} — ${part.title}`);
+          part.subs.forEach(([key, no, title]) => {
+            lines.push('', `${no} ${title}`, fmAnswer(key).trim() || '(미작성)');
+          });
+        });
       });
       return lines.join('\n');
     }
@@ -3977,7 +4044,7 @@
         return;
       }
       const empty = fmBoxes().filter((ta) => !ta.value.trim()).length;
-      if (empty === FM_QUESTIONS.length) { showToast('답변을 하나 이상 적어 주세요.'); return; }
+      if (empty === FM_ITEMS.length) { showToast('답변을 하나 이상 적어 주세요.'); return; }
       if (empty && !window.confirm(`${empty}개 문항이 비어 있어요. 이대로 제출할까요?`)) return;
       if (!WORKSHOP_ENDPOINT) { showToast('아직 메일 전송이 연결되지 않았어요. 관리자에게 알려 주세요.'); return; }
 
@@ -3985,7 +4052,8 @@
         form: 'forum4',
         name: nameEl.value.trim(),
         org: fmForm.elements.org.value.trim(),
-        qs: JSON.stringify(FM_QUESTIONS.map(([key, no, title]) => ({ no, title, answer: fmAnswer(key).trim() }))),
+        qs: JSON.stringify(FM_ITEMS.map(({ key, no, title, group, part }) => ({
+          no: no.replace(/\.$/, ''), title: `${title} (${group.no} · ${part.label.replace(/^\S+\s/, '')})`, answer: fmAnswer(key).trim() }))),
       });
 
       fmSubmit.disabled = true;
