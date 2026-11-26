@@ -8,7 +8,12 @@
  *      (status 가 없으면 예전 버전과 같이 '참석'으로 기록합니다.)
  *
  * 덮어쓰기 규칙: 기존 값과 상관없이 항상 덮어씁니다.
- *   (직전 값은 응답의 previous 로 돌려줍니다.)
+ *   (다른 사람의 기록이 새어 나가지 않도록 직전 값이나 명단 일치 여부는 응답에 담지 않습니다.)
+ *
+ * 시트 주소는 코드에 두지 않습니다 (저장소가 공개되어 있으므로).
+ *   - 이 스크립트가 출석부 시트에 붙어 있는(확장 프로그램 → Apps Script) 프로젝트면 설정이 필요 없습니다.
+ *   - 따로 만든 프로젝트라면 프로젝트 설정 → 스크립트 속성 → SHEET_ID 에 시트 ID를 넣어 주세요.
+ *   출석부 시트 자체의 공유 설정은 '제한됨'으로 두세요. 웹앱은 배포한 계정으로 실행되므로 그래도 동작합니다.
  *
  * 배포: 확장 프로그램 → Apps Script → 이 코드 붙여넣기 →
  *       배포 → 새 배포 → 유형: 웹 앱 →
@@ -17,7 +22,6 @@
  */
 
 // ── 설정 ────────────────────────────────────────────────
-var SHEET_ID = '1wNtGsxZAWl9Rx_EhaYCgpToGx6JOGXcOpi7QjrtZWrA';
 var SHEET_GID = 127070871;   // 출석부 탭 gid
 var MARKS = ['참석', '불참'];  // 셀에 기록할 수 있는 글자
 var DEFAULT_MARK = '참석';     // status 가 없을 때 기록할 글자
@@ -35,7 +39,7 @@ function doPost(e) {
 
 function respond(e, result) {
   var cb = e && e.parameter && e.parameter.callback;
-  if (cb) {
+  if (cb && /^[A-Za-z0-9_]+$/.test(cb)) {  // 콜백 이름에 코드가 끼어들지 않도록 글자를 제한합니다.
     return ContentService
       .createTextOutput(cb + '(' + JSON.stringify(result) + ')')
       .setMimeType(ContentService.MimeType.JAVASCRIPT);
@@ -56,7 +60,7 @@ function handle(params) {
       return { ok: false, error: "참석 여부는 '참석' 또는 '불참'이어야 합니다." };
     }
 
-    var sheet = getSheetByGid(SHEET_ID, SHEET_GID);
+    var sheet = getSheetByGid(SHEET_GID);
     if (!sheet) return { ok: false, error: '출석부 탭을 찾을 수 없습니다.' };
 
     var lastRow = sheet.getLastRow();
@@ -79,24 +83,15 @@ function handle(params) {
     for (var i = 0; i < names.length; i++) {
       if (normalize(names[i][0]) === name) { rowIndex = HEADER_ROW + 1 + i; break; }
     }
-    if (rowIndex === -1) {
-      return { ok: false, notFound: true, error: "'" + name + "' 님을 명단에서 찾을 수 없습니다." };
-    }
+    if (rowIndex === -1) return { ok: false, error: '기록하지 못했습니다. 이름을 확인해 주세요.' };
 
     // 3) 출석 기록 — 기존 값과 상관없이 항상 덮어쓴다.
-    var cell = sheet.getRange(rowIndex, best.col);
-    var prev = cell.getValue();
-    cell.setValue(mark);
+    sheet.getRange(rowIndex, best.col).setValue(mark);
 
-    return {
-      ok: true,
-      matchedName: normalize(names[rowIndex - HEADER_ROW - 1][0]),
-      column: String(header[best.col - 1]).trim(),
-      mark: mark,
-      previous: prev === '' ? null : prev
-    };
+    return { ok: true, column: String(header[best.col - 1]).trim(), mark: mark };
   } catch (err) {
-    return { ok: false, error: String(err) };
+    console.error(err);  // 실행 로그에만 남기고, 방문자에게는 내부 오류 내용을 보이지 않습니다.
+    return { ok: false, error: '처리 중 오류가 발생했습니다.' };
   }
 }
 
@@ -112,8 +107,11 @@ function normalize(v) {
     .trim();
 }
 
-function getSheetByGid(id, gid) {
-  var ss = SpreadsheetApp.openById(id);
+// 스크립트 속성 SHEET_ID 가 있으면 그 시트를, 없으면 이 스크립트가 붙어 있는 시트를 엽니다.
+function getSheetByGid(gid) {
+  var id = PropertiesService.getScriptProperties().getProperty('SHEET_ID');
+  var ss = id ? SpreadsheetApp.openById(id) : SpreadsheetApp.getActiveSpreadsheet();
+  if (!ss) return null;
   var sheets = ss.getSheets();
   for (var i = 0; i < sheets.length; i++) {
     if (sheets[i].getSheetId() === gid) return sheets[i];

@@ -18,11 +18,25 @@
  *   (clasp 로 코드를 고친 뒤 `clasp create-deployment --deploymentId <위 ID>` 로 올리면 URL이 그대로 유지됩니다.
  *    매니페스트 appsscript.json 에 webapp: executeAs USER_DEPLOYING / access ANYONE_ANONYMOUS 필요)
  *   이 프로젝트에는 Forum.gs(HR 인사이트 포럼 4조 설문)도 함께 올라갑니다. 올릴 때는 두 파일을 모두 push 하세요.
+ *
+ * 받는 주소는 코드에 두지 않습니다 (저장소가 공개되어 있으므로).
+ *   프로젝트 설정 → 스크립트 속성 → TO_EMAIL 에 받을 이메일 주소를 넣어 주세요.
+ *   (포럼 설문만 다른 주소로 받고 싶으면 FORUM_TO_EMAIL 을 추가하면 됩니다.)
+ *
+ * 남용 방지 (워크샵·포럼 설문 공통, 이 파일의 guardMail):
+ *   - 허니팟: 사람에게는 보이지 않는 website 칸이 채워져 오면 봇으로 보고, 성공한 척만 하고 메일은 보내지 않습니다.
+ *   - 횟수 제한: CacheService 로 10분·6시간 동안 보낼 수 있는 응답 수를 설문마다 제한합니다.
+ *   - 마감: WORKSHOP_CLOSES_AT 이 지나면 워크샵 설문은 더 받지 않습니다.
+ *     (포럼 설문이 같은 웹앱 URL을 쓰므로 배포 자체는 끄지 않습니다. 두 설문이 모두 끝나면
+ *      배포 관리에서 이 배포를 보관(archive)하면 됩니다.)
  */
 
 // ── 설정 ────────────────────────────────────────────────
-var TO_EMAIL = 'bronzecircles@gmail.com';
 var MAX_LEN = 3000;   // 한 칸에 받을 최대 글자 수
+// 워크샵 설문 마감 (제출 기한 11/18, 화면 잠금이 다시 걸리는 12/1 0시와 맞춤)
+var WORKSHOP_CLOSES_AT = new Date('2026-12-01T00:00:00+09:00');
+// [기간(초), 그 기간에 받을 수 있는 최대 응답 수] — 전체 응답자 합계 기준
+var SURVEY_RATE_LIMITS = [[600, 10], [21600, 40]];
 var TEAMS = ['R&D기획팀', 'GCLP팀', 'NCS팀', 'Bio규제관리팀'];
 
 var COMMON = {
@@ -58,6 +72,7 @@ var TOPICS = {
 // ── 엔트리 포인트 ────────────────────────────────────────
 function doPost(e) {
   var params = (e && e.parameter) || {};
+  if (String(params.website || '').trim()) return json({ ok: true });  // 허니팟에 걸린 봇: 보내지 않음
   // HR 인사이트 포럼 4조 설문은 같은 웹앱 URL로 받고 Forum.gs 에서 처리합니다.
   if (params.form === 'forum4') return json(handleForum(params));
   return json(handle(params));
@@ -72,6 +87,10 @@ function json(result) {
 // ── 핵심 로직 ───────────────────────────────────────────
 function handle(params) {
   try {
+    if (Date.now() >= WORKSHOP_CLOSES_AT.getTime()) return { ok: false, closed: true, error: '설문이 마감되었습니다.' };
+    var toEmail = mailTo('TO_EMAIL');
+    if (!toEmail) return { ok: false, error: '받는 주소(TO_EMAIL)가 설정되어 있지 않습니다.' };
+
     var get = function (key) { return String(params[key] || '').trim().slice(0, MAX_LEN); };
     var name = get('name');
     var team = get('team');
@@ -80,6 +99,7 @@ function handle(params) {
     if (!name) return { ok: false, error: '이름이 비어 있습니다.' };
     if (TEAMS.indexOf(team) === -1) return { ok: false, error: '소속 팀을 골라 주세요.' };
     if (!TOPICS[topic]) return { ok: false, error: '실별 주제를 골라 주세요.' };
+    if (!takeQuota('workshop', SURVEY_RATE_LIMITS)) return limitedResult();
 
     var sections = [
       { title: COMMON.title, questions: COMMON.questions, keys: ['q1', 'q2', 'q3', 'q4'] },
@@ -111,7 +131,7 @@ function handle(params) {
     html.push('</div>');
 
     MailApp.sendEmail({
-      to: TO_EMAIL,
+      to: toEmail,
       name: '본부 워크샵 설문',
       subject: '[4조 사전의견] ' + name + ' (' + team + ') · 주제 ' + (topic === '1' ? '①' : '②')
         + ' · ' + answered + '/8 작성',
@@ -121,7 +141,8 @@ function handle(params) {
 
     return { ok: true };
   } catch (err) {
-    return { ok: false, error: String(err) };
+    console.error(err);  // 실행 로그에만 남기고, 응답자에게는 내부 오류 내용을 보이지 않습니다.
+    return { ok: false, error: '처리 중 오류가 발생했습니다.' };
   }
 }
 
@@ -131,6 +152,34 @@ function authorize() {
 }
 
 // ── 유틸 ────────────────────────────────────────────────
+
+// 스크립트 속성에서 받는 주소를 읽습니다. key 가 없으면 TO_EMAIL 을 씁니다.
+function mailTo(key) {
+  var props = PropertiesService.getScriptProperties();
+  return props.getProperty(key) || props.getProperty('TO_EMAIL');
+}
+
+function limitedResult() {
+  return { ok: false, limited: true, error: '잠시 뒤에 다시 제출해 주세요. 응답이 너무 많이 들어오고 있습니다.' };
+}
+
+// limits 의 모든 기간에서 남은 횟수가 있으면 1씩 쓰고 true, 하나라도 다 찼으면 false.
+function takeQuota(name, limits) {
+  var cache = CacheService.getScriptCache();
+  var lock = LockService.getScriptLock();
+  lock.waitLock(5000);
+  try {
+    var now = Math.floor(Date.now() / 1000);
+    var keys = limits.map(function (l) { return 'rl:' + name + ':' + l[0] + ':' + Math.floor(now / l[0]); });
+    var counts = keys.map(function (k) { return parseInt(cache.get(k), 10) || 0; });
+    for (var i = 0; i < limits.length; i++) if (counts[i] >= limits[i][1]) return false;
+    for (var j = 0; j < limits.length; j++) cache.put(keys[j], String(counts[j] + 1), limits[j][0]);
+    return true;
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function escapeHtml(s) {
   return String(s)
     .replace(/&/g, '&amp;')
