@@ -14,6 +14,8 @@
  *   action=ping     : 비밀번호·연결 확인
  *   action=stats    : 통계 계산용 집계 데이터
  *   action=setViews : 페이지의 누적 조회수 수정 (page, views)
+ *   비밀번호가 연속 ADMIN_MAX_FAILS(5)번 틀리면 ADMIN_LOCK_MIN(30)분 동안 맞는 비밀번호도 받지 않습니다.
+ *   (그 전에 풀려면 스크립트 속성에서 ADMIN_FAILS·ADMIN_LOCK_UNTIL 을 지우면 됩니다.)
  *
  * 최초 설정:
  *   1) 이 코드를 붙여넣고 저장 → 함수 목록에서 setup 실행 → 권한 승인.
@@ -30,6 +32,8 @@ var SHEET_NAME = 'events';
 var HEADERS = ['time', 'date', 'hour', 'page', 'visitor', 'new', 'device', 'browser', 'os', 'referrer', 'lang', 'country', 'region', 'city'];
 var STATS_DAYS = 400;   // 관리자 화면으로 보내는 최대 기간 (일)
 var RECENT = 200;       // 최근 방문 기록 줄 수
+var ADMIN_MAX_FAILS = 5;  // 관리자 비밀번호 연속 실패 허용 횟수
+var ADMIN_LOCK_MIN = 30;  // 그만큼 틀리면 잠그는 시간 (분)
 
 // ── 엔트리 포인트 ────────────────────────────────────────
 function doGet(e) {
@@ -116,9 +120,8 @@ function logEvent(page, params) {
 
 // ── 관리자 API ──────────────────────────────────────────
 function handleAdmin(params) {
-  var key = PropertiesService.getScriptProperties().getProperty('ADMIN_KEY');
-  if (!key) return { ok: false, error: '스크립트 속성에 ADMIN_KEY가 설정되어 있지 않습니다.' };
-  if (String(params.key || '') !== key) return { ok: false, auth: false, error: '비밀번호가 올바르지 않습니다.' };
+  var auth = checkAdminKey(String(params.key || ''));
+  if (!auth.ok) return auth;
 
   try {
     if (params.action === 'ping') return { ok: true };
@@ -127,6 +130,41 @@ function handleAdmin(params) {
     return { ok: false, error: '알 수 없는 요청입니다.' };
   } catch (err) {
     return { ok: false, error: String(err) };
+  }
+}
+
+// 비밀번호 확인 + 연속 실패 잠금. 잠긴 동안에는 맞는 비밀번호도 받지 않습니다 (대입 공격을 끊기 위해).
+function checkAdminKey(given) {
+  var props = PropertiesService.getScriptProperties();
+  var key = props.getProperty('ADMIN_KEY');
+  if (!key) return { ok: false, error: '스크립트 속성에 ADMIN_KEY가 설정되어 있지 않습니다.' };
+
+  var lock = LockService.getScriptLock();
+  lock.waitLock(5000);
+  try {
+    var until = parseInt(props.getProperty('ADMIN_LOCK_UNTIL'), 10) || 0;
+    if (Date.now() < until) {
+      var min = Math.ceil((until - Date.now()) / 60000);
+      return { ok: false, auth: false, locked: true,
+        error: '비밀번호를 ' + ADMIN_MAX_FAILS + '번 틀려 잠겼습니다. ' + min + '분 뒤에 다시 시도해 주세요.' };
+    }
+    if (given === key) {
+      if (props.getProperty('ADMIN_FAILS')) props.deleteProperty('ADMIN_FAILS');
+      if (until) props.deleteProperty('ADMIN_LOCK_UNTIL');
+      return { ok: true };
+    }
+    var fails = (parseInt(props.getProperty('ADMIN_FAILS'), 10) || 0) + 1;
+    if (fails >= ADMIN_MAX_FAILS) {
+      props.setProperty('ADMIN_LOCK_UNTIL', String(Date.now() + ADMIN_LOCK_MIN * 60000));
+      props.deleteProperty('ADMIN_FAILS');
+      return { ok: false, auth: false, locked: true,
+        error: '비밀번호를 ' + ADMIN_MAX_FAILS + '번 틀려 ' + ADMIN_LOCK_MIN + '분 동안 잠겼습니다.' };
+    }
+    props.setProperty('ADMIN_FAILS', String(fails));
+    return { ok: false, auth: false,
+      error: '비밀번호가 올바르지 않습니다. (남은 시도 ' + (ADMIN_MAX_FAILS - fails) + '번)' };
+  } finally {
+    lock.releaseLock();
   }
 }
 

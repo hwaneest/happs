@@ -653,6 +653,8 @@
     .contact-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 16px; }
     @media (max-width: 520px) { .contact-grid { grid-template-columns: minmax(0, 1fr); } }
     .contact-field { display: flex; flex-direction: column; gap: 8px; }
+    /* 허니팟: 사람에게는 보이지 않고, 칸을 모두 채우는 봇만 채웁니다 (채워져 오면 서버가 메일을 보내지 않음) */
+    .hp-field { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
     .contact-field.full { grid-column: 1 / -1; }
     .contact-field label { font-size: 14px; font-weight: 700; }
     .contact-field .req { color: #e5484d; }
@@ -1790,6 +1792,7 @@
               <textarea id="ctMessage" name="message" placeholder="주제, 대상, 목적 등을 자유롭게 알려주세요." required></textarea>
             </div>
           </div>
+          <div class="hp-field" aria-hidden="true"><label>웹사이트 (비워 두세요)<input type="text" name="website" tabindex="-1" autocomplete="off" /></label></div>
           <button type="submit" class="contact-submit" id="contactSubmit">문의 보내기 →</button>
         </form>
       </div>
@@ -1895,6 +1898,7 @@
           <div data-ws-set="2"></div>
         </div>
 
+        <div class="hp-field" aria-hidden="true"><label>웹사이트 (비워 두세요)<input type="text" name="website" tabindex="-1" autocomplete="off" /></label></div>
         <div class="ws-submit-bar">
           <span class="ws-progress" id="wsProgress"></span>
           <button type="button" class="tool" id="wsReset">초기화</button>
@@ -1949,6 +1953,7 @@
 
         <div id="fmQuestions"></div>
 
+        <div class="hp-field" aria-hidden="true"><label>웹사이트 (비워 두세요)<input type="text" name="website" tabindex="-1" autocomplete="off" /></label></div>
         <div class="ws-submit-bar">
           <span class="ws-progress" id="fmProgress"></span>
           <button type="button" class="tool" id="fmReset">초기화</button>
@@ -3623,7 +3628,7 @@
       if (res.ok) {
         showToast('출석체크가 완료되었습니다!');
       } else {
-        showToast('출석이 되지 않았습니다. 구글 스프레드시트에서 출석체크해 주세요. (문의: 김동환 님)');
+        showToast('출석이 되지 않았습니다. 구글 스프레드시트에서 출석체크해 주세요. (문의: 담당자)');
       }
     });
 
@@ -3643,6 +3648,7 @@
     function contactData() {
       const data = {};
       CONTACT_FIELDS.forEach(([key]) => { data[key] = contactForm.elements[key].value.trim(); });
+      data.website = contactForm.elements.website.value;  // 허니팟 (사람은 비워 둠)
       return data;
     }
 
@@ -3687,7 +3693,7 @@
         contactForm.reset();
         showToast('문의가 전송되었습니다. 곧 연락드릴게요!');
       } else {
-        showToast('전송에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+        showToast(res.limited ? res.error : '전송에 실패했습니다. 잠시 후 다시 시도해 주세요.');
       }
     });
 
@@ -3828,6 +3834,7 @@
         name: wsForm.elements.name.value.trim(),
         team: wsForm.elements.team.value,
         topic: wsTopic(),
+        website: wsForm.elements.website.value,  // 허니팟 (사람은 비워 둠)
       });
       wsActive().forEach((ta) => data.set(ta.dataset.key, ta.value.trim()));
 
@@ -3848,7 +3855,9 @@
         wsDone.hidden = false;
         window.scrollTo(0, 0);
       } else {
-        showToast('제출에 실패했습니다. 잠시 후 다시 시도해 주세요. (작성 내용은 그대로 남아 있어요)');
+        showToast(res.closed ? '설문이 마감되었습니다. 참여해 주셔서 감사합니다.'
+          : res.limited ? res.error + ' (작성 내용은 그대로 남아 있어요)'
+          : '제출에 실패했습니다. 잠시 후 다시 시도해 주세요. (작성 내용은 그대로 남아 있어요)');
       }
     });
 
@@ -4054,6 +4063,7 @@
         org: fmForm.elements.org.value.trim(),
         qs: JSON.stringify(FM_ITEMS.map(({ key, no, title, group, part }) => ({
           no: no.replace(/\.$/, ''), title: `${title} (${group.no} · ${part.label.replace(/^\S+\s/, '')})`, answer: fmAnswer(key).trim() }))),
+        website: fmForm.elements.website.value,  // 허니팟 (사람은 비워 둠)
       });
 
       fmSubmit.disabled = true;
@@ -4074,7 +4084,9 @@
         fmDone.hidden = false;
         window.scrollTo(0, 0);
       } else {
-        showToast('제출에 실패했습니다. 잠시 후 다시 시도해 주세요. (작성 내용은 그대로 남아 있어요)');
+        showToast(res.closed ? '설문이 마감되었습니다. 참여해 주셔서 감사합니다.'
+          : res.limited ? res.error + ' (작성 내용은 그대로 남아 있어요)'
+          : '제출에 실패했습니다. 잠시 후 다시 시도해 주세요. (작성 내용은 그대로 남아 있어요)');
       }
     });
 
