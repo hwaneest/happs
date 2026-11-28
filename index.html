@@ -2111,7 +2111,8 @@
             <p id="hwDoneDesc"></p>
             <ul class="hw-near" id="hwNear"></ul>
             <div class="toolbar" style="margin-top:14px;">
-              <button type="button" class="tool primary" id="hwShare">결과 복사</button>
+              <button type="button" class="tool primary" id="hwMore">새 단어로 한 판 더</button>
+              <button type="button" class="tool" id="hwShare">결과 복사</button>
             </div>
           </div>
 
@@ -2124,7 +2125,10 @@
 
           <div class="hw-foot">
             <span class="hw-next" id="hwCount"></span>
-            <button type="button" class="tool" id="hwGiveUp">포기하고 정답 보기</button>
+            <div class="toolbar" style="border-top:none;padding-top:0;margin:0;">
+              <button type="button" class="tool" id="hwBackDaily" hidden>오늘의 단어로 돌아가기</button>
+              <button type="button" class="tool" id="hwGiveUp">포기하고 정답 보기</button>
+            </div>
           </div>
         </div>
 
@@ -2132,6 +2136,7 @@
           <summary>어떻게 하나요?</summary>
           <ul>
             <li>정답은 하루에 하나, 모두에게 같은 단어입니다. 한국 시간 자정에 새 단어로 바뀝니다.</li>
+            <li>오늘의 단어를 맞히거나 포기한 뒤에는 '새 단어로 한 판 더'를 눌러 다른 단어로 계속 즐길 수 있어요. 지난 날의 단어부터 나옵니다.</li>
             <li>유사도는 -100~100 사이 값이고, 높을수록 정답과 뜻이나 쓰임새가 가깝습니다. 정답은 100입니다.</li>
             <li>순위는 정답과 가장 가까운 단어 1,000개 안에서 몇 번째인지입니다. 1위가 정답 바로 옆 단어예요.</li>
             <li>조사·어미를 붙이지 말고 기본형으로 넣어 주세요 (사과를 → 사과, 먹었다 → 먹다). 명사와 동사·형용사 기본형 약 4만 개를 알아듣습니다.</li>
@@ -4405,7 +4410,9 @@
     const HW_DIR = 'data/wordsim/';
     const HW_TOP = 1000;          // 순위를 보여 주는 범위
     const hwEl = (id) => document.getElementById(id);
-    const hw = { loading: null, vocab: null, index: null, meta: null, day: -1, sims: null, sorted: null, answer: -1, st: null };
+    // mode: 'daily' = 오늘의 단어, 'extra' = 정답을 낸 뒤 이어서 하는 추가 게임. p = 지금 불러온 문제 번호
+    const hw = { loading: null, vocab: null, index: null, meta: null, day: -1, mode: 'daily', p: -1, sims: null, sorted: null, answer: -1, st: null, daily: null, ex: null };
+    const HW_KEY = 'happs_wordsim', HW_EX_KEY = 'happs_wordsim_extra';
 
     // 한국 시간 기준 오늘이 첫 문제 날짜로부터 며칠째인지
     function hwDayNo(meta) {
@@ -4429,40 +4436,68 @@
       return hw.loading;
     }
 
+    async function hwLoadPuzzle(n) {
+      if (n === hw.p) return;
+      const res = await fetch(HW_DIR + 'p/' + String(n).padStart(3, '0') + '.bin');
+      if (!res.ok) throw res;
+      hw.sims = new Int16Array(await res.arrayBuffer());
+      hw.sorted = Int16Array.from(hw.sims).sort().reverse();
+      hw.answer = hw.sims.indexOf(10000);
+      hw.p = n;
+    }
+
     async function hwOpen() {
       try {
         await hwLoadBase();
         const day = Math.max(0, hwDayNo(hw.meta));
         if (day !== hw.day) {
-          const n = day % hw.meta.count;
-          const res = await fetch(HW_DIR + 'p/' + String(n).padStart(3, '0') + '.bin');
-          if (!res.ok) throw res;
-          hw.sims = new Int16Array(await res.arrayBuffer());
-          hw.sorted = Int16Array.from(hw.sims).sort().reverse();
-          hw.answer = hw.sims.indexOf(10000);
+          // 날짜가 바뀌면 오늘의 단어부터 보여 줍니다.
           hw.day = day;
+          hw.mode = 'daily';
           hwLoadState();
         }
+        await hwLoadPuzzle(hw.mode === 'extra' ? hw.ex.p : hw.day % hw.meta.count);
+        hw.st = hw.mode === 'extra' ? hw.ex : hw.daily;
         hwEl('hwLoading').hidden = true;
         hwEl('hwApp').hidden = false;
         hwRender();
         hwTick();
         if (!hw.st.done && matchMedia('(hover: hover)').matches) hwEl('hwInput').focus();
       } catch (e) {
+        hwEl('hwLoading').hidden = false;
+        hwEl('hwApp').hidden = true;
         hwEl('hwLoading').textContent = '단어 자료를 불러오지 못했어요. 인터넷 연결을 확인하고 다시 열어 주세요.';
       }
     }
 
     function hwLoadState() {
-      let st = null;
-      try { st = JSON.parse(localStorage.getItem('happs_wordsim') || 'null'); } catch (e) {}
-      if (!st || st.day !== hw.day || !Array.isArray(st.g)) st = { day: hw.day, g: [], done: '' };
       // 혹시 단어 목록이 바뀌어 모르는 단어가 남아 있으면 버립니다.
-      st.g = st.g.filter((w) => hw.index.has(w));
-      hw.st = st;
+      const clean = (st) => { st.g = st.g.filter((w) => hw.index.has(w)); return st; };
+      let st = null;
+      try { st = JSON.parse(localStorage.getItem(HW_KEY) || 'null'); } catch (e) {}
+      if (!st || st.day !== hw.day || !Array.isArray(st.g)) st = { day: hw.day, g: [], done: '' };
+      hw.daily = clean(st);
+      let ex = null;
+      try { ex = JSON.parse(localStorage.getItem(HW_EX_KEY) || 'null'); } catch (e) {}
+      if (!ex || !Array.isArray(ex.g) || !Array.isArray(ex.played) || typeof ex.p !== 'number') ex = { p: -1, g: [], done: '', played: [] };
+      hw.ex = clean(ex);
     }
     function hwSave() {
-      try { localStorage.setItem('happs_wordsim', JSON.stringify(hw.st)); } catch (e) {}
+      try {
+        localStorage.setItem(HW_KEY, JSON.stringify(hw.daily));
+        localStorage.setItem(HW_EX_KEY, JSON.stringify(hw.ex));
+      } catch (e) {}
+    }
+
+    // 추가 게임에 낼 문제: 오늘 문제와 이미 푼 추가 문제는 빼고, 지난 날의 문제부터 고릅니다.
+    // (거꾸로 돌기 때문에 앞으로 나올 문제는 가장 먼 날의 것부터 나옵니다.)
+    function hwNextExtra() {
+      const c = hw.meta.count, today = hw.day % c;
+      for (let k = 1; k < c; k++) {
+        const n = ((today - k) % c + c) % c;
+        if (n !== hw.ex.p && !hw.ex.played.includes(n)) return n;
+      }
+      return -1;
     }
 
     // 정답보다 유사도가 높은 단어 수 = 순위 (정답 0, 가장 가까운 단어 1위)
@@ -4489,7 +4524,9 @@
     function hwRender() {
       const st = hw.st;
       const fmtS = (k) => hwFmt(hw.sorted[k]);
-      hwEl('hwNo').textContent = `오늘의 단어 #${hw.day + 1}`;
+      const extra = hw.mode === 'extra';
+      hwEl('hwNo').textContent = extra ? `추가 게임 · 단어 ${hw.ex.played.length + 1}` : `오늘의 단어 #${hw.day + 1}`;
+      hwEl('hwBackDaily').hidden = !extra;
       hwEl('hwHint').innerHTML = `정답과 가장 가까운 단어의 유사도는 <b>${fmtS(1)}</b>, 10번째는 <b>${fmtS(10)}</b>, `
         + `1,000번째는 <b>${fmtS(HW_TOP)}</b>입니다.`;
 
@@ -4514,7 +4551,7 @@
           : `정답은 <span class="hw-answer">${sbEsc(ans)}</span>였어요`;
         hwEl('hwDoneDesc').textContent = st.done === 'win'
           ? `${st.n}번 만에 맞혔어요. 정답과 가장 가까운 단어들:`
-          : '내일 새 단어로 다시 도전해 보세요. 정답과 가장 가까운 단어들:';
+          : '새 단어로 다시 도전해 보세요. 정답과 가장 가까운 단어들:';
         const near = [];
         for (let k = 1; near.length < 10 && k < hw.sorted.length; k++) {
           // 같은 유사도가 여러 개일 수 있어 순위 k의 단어를 직접 찾습니다.
@@ -4561,7 +4598,10 @@
 
     hwEl('hwGiveUp').addEventListener('click', () => {
       if (!hw.st || hw.st.done) return;
-      if (!window.confirm('포기하고 오늘의 정답을 볼까요? 오늘은 더 이상 추측할 수 없어요.')) return;
+      const q = hw.mode === 'extra'
+        ? '포기하고 정답을 볼까요? 이 단어는 더 이상 추측할 수 없어요.'
+        : '포기하고 오늘의 정답을 볼까요? 오늘의 단어는 더 이상 추측할 수 없어요.';
+      if (!window.confirm(q)) return;
       hw.st.done = 'gaveup';
       hwSave();
       hwMsg('');
@@ -4571,7 +4611,7 @@
     hwEl('hwShare').addEventListener('click', async () => {
       const st = hw.st;
       const best = Math.min(...st.g.filter((w) => hw.index.get(w) !== hw.answer).map((w) => hwRank(hw.sims[hw.index.get(w)])), Infinity);
-      const lines = [`히든 워드 #${hw.day + 1} 🎯`];
+      const lines = [hw.mode === 'extra' ? '히든 워드 추가 게임 🎯' : `히든 워드 #${hw.day + 1} 🎯`];
       lines.push(st.done === 'win' ? `${st.n}번 만에 정답!` : `포기 (추측 ${st.g.length}번)`);
       if (best <= HW_TOP) lines.push(`정답 전 가장 가까웠던 순위: ${best}위`);
       lines.push(location.origin + location.pathname + '#wordsim');
@@ -4581,6 +4621,30 @@
       } catch (e) {
         showToast('복사하지 못했어요');
       }
+    });
+
+    // 정답을 낸 뒤 다른 단어로 새 게임 (추가 게임이 진행 중이면 이어서 합니다)
+    hwEl('hwMore').addEventListener('click', async () => {
+      if (!hw.st || !hw.st.done) return;
+      if (hw.mode !== 'extra' || hw.ex.done || hw.ex.p < 0) {
+        if (hw.ex.p >= 0 && hw.ex.done && !hw.ex.played.includes(hw.ex.p)) hw.ex.played.push(hw.ex.p);
+        if (hw.mode === 'extra' || !(hw.ex.p >= 0 && !hw.ex.done)) {
+          const n = hwNextExtra();
+          if (n < 0) { showToast('준비된 단어를 모두 풀었어요'); return; }
+          Object.assign(hw.ex, { p: n, g: [], done: '', n: 0 });
+        }
+        hwSave();
+      }
+      hw.mode = 'extra';
+      hwMsg('');
+      await hwOpen();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    hwEl('hwBackDaily').addEventListener('click', () => {
+      hw.mode = 'daily';
+      hwMsg('');
+      hwOpen();
     });
 
     // 다음 문제까지 남은 시간 (화면이 열려 있을 때만 1초마다)
